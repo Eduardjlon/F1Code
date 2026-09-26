@@ -418,7 +418,7 @@ F1Code no tiene funciones ni bloques con ámbito propio, así que no se requiere
 
 ---
 
-## Autores
+## Integrantes del Grupo 1
 
 | Nombre | Carné |
 |---|---|
