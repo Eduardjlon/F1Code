@@ -1,0 +1,6 @@
+// Programa invalido: falta el tipo (engine/fuel) en la declaracion
+garage hamilton := 300;
+
+race (hamilton > 200) {
+    radio hamilton;
+}

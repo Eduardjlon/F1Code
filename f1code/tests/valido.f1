@@ -1,0 +1,21 @@
+// Programa demostrativo de F1Code
+// hamilton = velocidad, leclerc = combustible restante
+garage engine hamilton := 300;
+garage fuel leclerc := 50.5;
+
+pitstop hamilton;
+
+race (hamilton > 250) {
+    radio hamilton;
+} overtake {
+    radio leclerc;
+}
+
+/* Ciclo que reduce la velocidad
+   hasta llegar al limite de pit lane */
+lap (hamilton > 200) {
+    hamilton boost -10;
+    radio hamilton;
+}
+
+finish;
