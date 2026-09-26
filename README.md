@@ -32,7 +32,7 @@ Proyecto del curso de **Compiladores** — Universidad San Pablo de Guatemala.
 
 ## Descripción
 
-F1Code es un lenguaje imperativo mínimo, de sintaxis inspirada en la Fórmula 1, diseñado para practicar las etapas clásicas de un compilador: análisis léxico, análisis sintáctico, construcción de AST, tabla de símbolos, validaciones semánticas y generación de código.
+F1Code es un lenguaje imperativo mínimo, de sintaxis inspirada en la Fórmula 1, diseñado para poder practicar las etapas clásicas de un compilador: análisis léxico, análisis sintáctico, construcción de AST, tabla de símbolos, validaciones semánticas y generación de código.
 
 En lugar de `int` se escribe `engine`, en lugar de `if` se escribe `race`, en lugar de `while` se escribe `lap`. Los archivos fuente usan la extensión **`.f1`**.
 
