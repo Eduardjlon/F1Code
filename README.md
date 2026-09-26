@@ -58,13 +58,13 @@ El compilador se construye por etapas. Actualmente el **front-end está funciona
 
 | Etapa | Estado |
 |---|---|
-| Análisis léxico (Flex) | ✅ Completado |
-| Análisis sintáctico (Bison) | ✅ Completado |
-| Árbol de Sintaxis Abstracta (AST) | ✅ Completado |
-| Tabla de símbolos | ✅ Completado |
-| Validaciones semánticas | ⬜ Pendiente |
-| Representación intermedia (IR) | ⬜ Pendiente |
-| Generación de código C11 | ⬜ Pendiente |
+| Análisis léxico (Flex) | Completado |
+| Análisis sintáctico (Bison) | Completado |
+| Árbol de Sintaxis Abstracta (AST) | Completado |
+| Tabla de símbolos | Completado |
+| Validaciones semánticas | Pendiente |
+| Representación intermedia (IR) | Pendiente |
+| Generación de código C11 | Pendiente |
 
 Hoy el compilador acepta un archivo `.f1`, lo analiza, imprime el AST y la tabla de símbolos, y reporta errores léxicos y sintácticos con número de línea. **Aún no valida semántica** (uso de variables no declaradas, redeclaraciones, compatibilidad de tipos) ni genera código.
 
