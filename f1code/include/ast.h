@@ -3,7 +3,8 @@
 
 typedef enum {
     TYPE_INT,
-    TYPE_FLOAT
+    TYPE_FLOAT,
+    TYPE_ERROR      /* tipo desconocido por un error previo (semantico.c) */
 } VarType;
 
 typedef enum {
@@ -43,6 +44,9 @@ typedef struct ASTNode {
 
     int ival;
     double fval;
+
+    VarType etype;             /* tipo inferido de una expresion (lo llena semantico.c) */
+    int hasFinish;             /* 1 si la sentencia contiene un finish (lo llena semantico.c) */
 } ASTNode;
 
 ASTNode *newProgram(ASTNode *stmts);

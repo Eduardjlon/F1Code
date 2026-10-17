@@ -1,6 +1,8 @@
 # F1Code
 
-Lenguaje de programación didáctico con temática de Fórmula 1, y su compilador construido con **Flex + Bison**, con destino final a **C11**.
+Lenguaje de programación didáctico con temática de Fórmula 1, y su traductor construido con **Flex + Bison**.
+
+En la cadena de traducción del curso, el **Grupo 1** recibe programas **F1Code** (`.f1`, generados por el Grupo 2) y los traduce a **Andante** (`.and`, que procesa el Grupo 8).
 
 Proyecto del curso de **Compiladores** — Universidad San Pablo de Guatemala.
 
@@ -54,19 +56,19 @@ El lenguaje cubre 10 capacidades obligatorias: declaración de variables, asigna
 
 ## Estado del proyecto
 
-El compilador se construye por etapas. Actualmente el **front-end está funcional**.
+El traductor se construye por etapas.
 
 | Etapa | Estado |
 |---|---|
 | Análisis léxico (Flex) | Completado |
-| Análisis sintáctico (Bison) | Completado |
+| Análisis sintáctico (Bison), con recuperación de errores | Completado |
 | Árbol de Sintaxis Abstracta (AST) | Completado |
 | Tabla de símbolos | Completado |
-| Validaciones semánticas | Pendiente |
+| Validaciones semánticas | Completado |
+| Generación de código Andante (`.and`) | Completado |
 | Representación intermedia (IR) | Pendiente |
-| Generación de código C11 | Pendiente |
 
-Hoy el compilador acepta un archivo `.f1`, lo analiza, imprime el AST y la tabla de símbolos, y reporta errores léxicos y sintácticos con número de línea. **Aún no valida semántica** (uso de variables no declaradas, redeclaraciones, compatibilidad de tipos) ni genera código.
+Hoy el traductor acepta un archivo `.f1`, lo analiza, valida declaraciones y tipos, y genera el `.and` equivalente. Los errores léxicos, sintácticos y semánticos se reportan con número de línea y, si hay alguno, **no se genera** el `.and`.
 
 ---
 
@@ -125,54 +127,77 @@ El proceso genera el parser con `bison -d`, el lexer con `flex`, compila las fue
 ## Uso
 
 ```bash
-./f1code <archivo.f1>
+./f1code <archivo.f1> [-o salida.and] [--ast] [--tabla]
 ```
+
+| Opción | Efecto |
+|---|---|
+| `-o archivo` | Nombre del `.and` de salida (por defecto, el mismo nombre con extensión `.and`) |
+| `--ast` | Imprime el árbol de sintaxis abstracta |
+| `--tabla` | Imprime la tabla de símbolos |
 
 Ejemplo:
 
 ```bash
-./f1code tests/valido.f1
+./f1code tests/valido.f1 --ast --tabla
 ```
 
-Salida:
+Salida en consola:
 
 ```
-=== F1Code Front-end ===
-Archivo: tests/valido.f1
-
->> Analisis lexico y sintactico completados sin errores.
-
 --- Arbol de Sintaxis Abstracta (AST) ---
 Program
-  Decl (engine) hamilton := 300    [linea 3]
-  Decl (fuel) leclerc := 50.5    [linea 4]
-  Input hamilton    [linea 6]
-  If (hamilton > 250)    [linea 12]
+  Decl (engine) hamilton := 300   [linea 3]
+  Decl (fuel) leclerc := 50.5   [linea 4]
+  Input hamilton   [linea 6]
+  If (hamilton > 250)   [linea 8]
     Then:
-      Output hamilton    [linea 9]
+      Output hamilton   [linea 9]
     Overtake:
-      Output leclerc    [linea 11]
-  While (hamilton > 200)    [linea 19]
-    Boost hamilton += -(10)    [linea 17]
-    Output hamilton    [linea 18]
-  Finish    [linea 21]
+      Output leclerc   [linea 11]
+  While (hamilton > 200)   [linea 16]
+    Boost hamilton += -(10)   [linea 17]
+    Output hamilton   [linea 18]
+  Finish   [linea 21]
 
 --- Tabla de simbolos ---
-Nombre          Tipo      Linea
-------          ----      -----
-hamilton        engine    3
-leclerc         fuel      4
+Nombre          Tipo       Linea
+------          ----       -----
+hamilton        engine     3
+leclerc         fuel       4
+
+>> Traduccion completada: tests/valido.f1 -> tests/valido.and
 ```
 
-Ante un error, el compilador reporta la línea y el token donde se detectó el problema, y aborta:
+Archivo generado `tests/valido.and`:
 
 ```
-Error sintactico en linea 2: syntax error (cerca de 'hamilton')
+// Codigo Andante generado por f1code (Grupo 1) desde valido.f1
 
->> Compilacion ABORTADA: 0 error(es) lexico(s), 1 error(es) sintactico(s).
+numero hamilton = 300;
+decimal leclerc = 50.5;
+leer hamilton;
+virar (hamilton > 250) inicio
+    caminar hamilton;
+final
+sino inicio
+    caminar leclerc;
+final
+historia (hamilton > 200) inicio
+    avanzar hamilton = hamilton + (-10);
+    caminar hamilton;
+final
 ```
 
-El código de salida es `0` si la compilación fue exitosa y distinto de `0` si hubo errores.
+Ante un error, el traductor reporta la línea, lo que encontró y lo que esperaba, y no genera el `.and`:
+
+```
+Error sintactico en linea 2: error de sintaxis: se encontro identificador, se esperaba engine o fuel
+
+>> Compilacion ABORTADA: 0 error(es) lexico(s), 1 error(es) sintactico(s). No se genero tests/invalido.and
+```
+
+Códigos de salida: `0` traducción correcta · `1` el programa tiene errores · `2` error de uso o de archivo.
 
 ---
 
@@ -255,8 +280,10 @@ OP_COMP       -> '<' | '>' | '<=' | '>=' | '==' | '!='
 
 expr          -> expr '+' term | expr '-' term | term
 term          -> term '*' factor | term '/' factor | factor
-factor        -> ENTERO | REAL | IDENT | '(' expr ')'
+factor        -> ENTERO | REAL | IDENT | '(' expr ')' | '-' factor
 ```
+
+> `'-' factor` (menos unario) no aparece en la sección 5 del contrato, pero el contrato lo usa en el ejemplo válido 6 y en el programa demostrativo (`hamilton boost -10;`), y el token `-` ya existe. El parser lo acepta para que esos ejemplos sean válidos.
 
 Las **llaves `{ }` son obligatorias** en todos los bloques. No existe cuerpo de una sola sentencia sin llaves.
 
@@ -311,19 +338,32 @@ Casos que el compilador debe rechazar, y por qué:
 
 ## Pruebas
 
-El directorio `tests/` contiene programas de prueba:
-
-| Archivo | Qué verifica |
-|---|---|
-| `valido.f1` | Programa que ejercita las 10 capacidades del lenguaje |
-| `invalido.f1` | Declaración sin tipo — dispara error sintáctico en línea 2 |
-
-Para correrlas:
-
 ```bash
-./f1code tests/valido.f1     # debe terminar sin errores
-./f1code tests/invalido.f1   # debe reportar el error y abortar
+make test
 ```
+
+Corre la batería completa (20 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
+
+| Válidas | Qué cubren |
+|---|---|
+| 01_demo_contrato | Programa demostrativo del contrato |
+| 02_ejemplos_contrato | Los 6 ejemplos válidos del contrato |
+| 03_aritmetica_precedencia | Precedencia, paréntesis, división entera, mezcla de tipos, menos unario |
+| 04_comparaciones_ciclo | Las 6 comparaciones, ciclo con contador |
+| 05_finish_anidado | `finish` dentro de un `race` dentro de un `lap` |
+| 06_bloques_renombrado | Declaración dentro de un ciclo, nombres reservados de Andante, código inalcanzable |
+
+| Inválidas | Error esperado |
+|---|---|
+| 01–06 | Los 6 ejemplos inválidos del contrato |
+| 07, 08 | `fuel` asignado a `engine` (declaración y `boost`) |
+| 09, 10 | Variable no declarada / redeclarada |
+| 11 | División entre cero |
+| 12 | Comentario de bloque sin cerrar |
+| 13 | Comparaciones encadenadas |
+| 14 | `=` en lugar de `:=` |
+
+`tests/valido.f1` y `tests/invalido.f1` son los programas de la Entrega 2.
 
 ---
 
@@ -333,16 +373,24 @@ Para correrlas:
 f1code/
 ├── Makefile           # Build de un solo comando
 ├── README.md
-├── include/           # Headers públicos (ast.h, symtab.h)
+├── include/           # Headers (ast.h, symtab.h, semantico.h, codegen_andante.h)
 ├── src/
-│   ├── f1code.l       # Especificación Flex (analizador léxico)
-│   ├── f1code.y       # Gramática Bison (analizador sintáctico)
-│   ├── ast.c          # Construcción e impresión del AST
-│   ├── symtab.c       # Tabla de símbolos
-│   └── main.c         # Punto de entrada
+│   ├── f1code.l           # Especificación Flex (analizador léxico)
+│   ├── f1code.y           # Gramática Bison (analizador sintáctico)
+│   ├── ast.c              # Construcción e impresión del AST
+│   ├── symtab.c           # Tabla de símbolos
+│   ├── semantico.c        # Validaciones: declaración, tipos, división entre cero, finish
+│   ├── codegen_andante.c  # Generador .and (único módulo que conoce Andante)
+│   └── main.c             # Punto de entrada
 ├── tests/
+│   ├── validos/           # Deben traducirse
+│   ├── esperado/          # .and esperado de cada válido
+│   ├── invalidos/         # Deben rechazarse
+│   ├── run_tests.sh
 │   ├── valido.f1
 │   └── invalido.f1
+├── docs/
+│   └── traduccion_andante.md  # Contrato de traducción F1Code -> Andante
 └── build/             # Artefactos generados — ignorado por Git
 ```
 
@@ -366,14 +414,18 @@ Código fuente (.f1)
 │ Tabla de símbolos │  Registro de variables: nombre, tipo, línea
 └───────┬───────────┘
         ▼
-  [ Validaciones ]     ← pendiente
+┌───────────────────┐
+│   Validaciones    │  semantico.c: declaración, tipos, finish
+└───────┬───────────┘
         ▼
-  [      IR      ]     ← pendiente
+┌───────────────────┐
+│ Generador Andante │  codegen_andante.c: AST → .and
+└───────┬───────────┘
         ▼
-  [  Salida C11  ]     ← pendiente
+  Programa Andante (.and) → Grupo 8
 ```
 
-Cada etapa tiene una responsabilidad única y se prueba por separado. Esa separación permite cambiar el back-end sin tocar el front-end.
+Cada etapa tiene una responsabilidad única y se prueba por separado. El generador es el único módulo que conoce Andante: si cambia el lenguaje destino, solo se reemplaza `codegen_andante.c`.
 
 ---
 
@@ -399,6 +451,9 @@ Cada nodo guarda la línea donde se reconoció. Es lo que permite dar mensajes d
 **Solo dos tipos numéricos.**
 `engine` (entero) y `fuel` (real) bastan para ejercitar las 10 capacidades obligatorias y para plantear el problema de conversión entre ellos, sin desviar el proyecto hacia un sistema de tipos que no es el objetivo del curso.
 
+**Traducción a Andante sin modificar F1Code.**
+Lo que Andante no tiene se resuelve con reglas semánticas y en el generador: `boost` se reescribe como `avanzar x = x + (e)`, un `finish` dentro de un bloque usa una variable bandera, las declaraciones dentro de bloques se suben al inicio y los identificadores que chocan con palabras de Andante se renombran. Ver [`f1code/docs/traduccion_andante.md`](f1code/docs/traduccion_andante.md).
+
 **Variables globales, tabla de símbolos plana.**
 F1Code no tiene funciones ni bloques con ámbito propio, así que no se requiere una pila de ámbitos. Si el lenguaje creciera con funciones, esa sería la primera estructura a cambiar.
 
@@ -407,14 +462,15 @@ F1Code no tiene funciones ni bloques con ámbito propio, así que no se requiere
 ## Roadmap
 
 **Semanas 13–14**
-- [ ] Parser y AST más completos, con anotación de tipos en los nodos
-- [ ] Manejo de errores con recuperación (regla `error` de Bison) para reportar varios errores en una sola corrida, en lugar de abortar en el primero
-- [ ] Validaciones semánticas: variable no declarada, redeclaración, compatibilidad de tipos en operaciones mixtas `engine`/`fuel`
-- [ ] Preparar la representación intermedia
+- [x] Parser y AST más completos, con anotación de tipos en los nodos
+- [x] Manejo de errores con recuperación (regla `error` de Bison) para reportar varios errores en una sola corrida
+- [x] Validaciones semánticas: variable no declarada, redeclaración, compatibilidad de tipos en operaciones mixtas `engine`/`fuel`
+- [ ] Representación intermedia
 
 **Entrega final**
-- [ ] Generación de código C11 a partir del AST
-- [ ] Batería de pruebas ampliada
+- [x] Generación de código Andante (`.and`) a partir del AST
+- [x] Batería de pruebas ampliada
+- [ ] Confirmar con el Grupo 8: `&&` en la condición de `historia`, literales `0.0` y `x + (-10)`
 
 ---
 

@@ -7,6 +7,7 @@ typedef struct SymEntry {
     char *name;
     VarType type;
     int line;
+    char *outName;             /* nombre en el .and (lo asigna codegen_andante.c) */
     struct SymEntry *next;
 } SymEntry;
 

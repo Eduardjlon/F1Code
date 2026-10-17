@@ -54,35 +54,35 @@ extern int yydebug;
     YYEOF = 0,                     /* "end of file"  */
     YYerror = 256,                 /* error  */
     YYUNDEF = 257,                 /* "invalid token"  */
-    GARAGE = 258,                  /* GARAGE  */
-    ENGINE = 259,                  /* ENGINE  */
-    FUEL = 260,                    /* FUEL  */
-    PITSTOP = 261,                 /* PITSTOP  */
-    RADIO = 262,                   /* RADIO  */
-    RACE = 263,                    /* RACE  */
-    OVERTAKE = 264,                /* OVERTAKE  */
-    LAP = 265,                     /* LAP  */
-    BOOST = 266,                   /* BOOST  */
-    FINISH = 267,                  /* FINISH  */
-    ASSIGN = 268,                  /* ASSIGN  */
-    LE = 269,                      /* LE  */
-    GE = 270,                      /* GE  */
-    EQ = 271,                      /* EQ  */
-    NE = 272,                      /* NE  */
-    LT = 273,                      /* LT  */
-    GT = 274,                      /* GT  */
-    PLUS = 275,                    /* PLUS  */
-    MINUS = 276,                   /* MINUS  */
-    TIMES = 277,                   /* TIMES  */
-    DIVIDE = 278,                  /* DIVIDE  */
-    LPAREN = 279,                  /* LPAREN  */
-    RPAREN = 280,                  /* RPAREN  */
-    LBRACE = 281,                  /* LBRACE  */
-    RBRACE = 282,                  /* RBRACE  */
-    SEMI = 283,                    /* SEMI  */
-    ENTERO = 284,                  /* ENTERO  */
-    REAL = 285,                    /* REAL  */
-    IDENT = 286                    /* IDENT  */
+    GARAGE = 258,                  /* "garage"  */
+    ENGINE = 259,                  /* "engine"  */
+    FUEL = 260,                    /* "fuel"  */
+    PITSTOP = 261,                 /* "pitstop"  */
+    RADIO = 262,                   /* "radio"  */
+    RACE = 263,                    /* "race"  */
+    OVERTAKE = 264,                /* "overtake"  */
+    LAP = 265,                     /* "lap"  */
+    BOOST = 266,                   /* "boost"  */
+    FINISH = 267,                  /* "finish"  */
+    ASSIGN = 268,                  /* ":="  */
+    LE = 269,                      /* "<="  */
+    GE = 270,                      /* ">="  */
+    EQ = 271,                      /* "=="  */
+    NE = 272,                      /* "!="  */
+    LT = 273,                      /* "<"  */
+    GT = 274,                      /* ">"  */
+    PLUS = 275,                    /* "+"  */
+    MINUS = 276,                   /* "-"  */
+    TIMES = 277,                   /* "*"  */
+    DIVIDE = 278,                  /* "/"  */
+    LPAREN = 279,                  /* "("  */
+    RPAREN = 280,                  /* ")"  */
+    LBRACE = 281,                  /* "{"  */
+    RBRACE = 282,                  /* "}"  */
+    SEMI = 283,                    /* ";"  */
+    ENTERO = 284,                  /* "numero entero"  */
+    REAL = 285,                    /* "numero real"  */
+    IDENT = 286                    /* "identificador"  */
   };
   typedef enum yytokentype yytoken_kind_t;
 #endif
@@ -91,7 +91,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 19 "src/f1code.y"
+#line 21 "src/f1code.y"
 
     int ival;
     double fval;
@@ -106,9 +106,23 @@ typedef union YYSTYPE YYSTYPE;
 # define YYSTYPE_IS_DECLARED 1
 #endif
 
+/* Location type.  */
+#if ! defined YYLTYPE && ! defined YYLTYPE_IS_DECLARED
+typedef struct YYLTYPE YYLTYPE;
+struct YYLTYPE
+{
+  int first_line;
+  int first_column;
+  int last_line;
+  int last_column;
+};
+# define YYLTYPE_IS_DECLARED 1
+# define YYLTYPE_IS_TRIVIAL 1
+#endif
+
 
 extern YYSTYPE yylval;
-
+extern YYLTYPE yylloc;
 
 int yyparse (void);
 
