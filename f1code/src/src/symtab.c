@@ -18,6 +18,7 @@ int symtab_insert(SymTable *t, const char *name, VarType type, int line) {
     e->name = strdup(name);
     e->type = type;
     e->line = line;
+    e->outName = NULL;
     e->next = t->head;
     t->head = e;
     t->count++;
@@ -52,6 +53,7 @@ void symtab_free(SymTable *t) {
     while (e) {
         SymEntry *nx = e->next;
         free(e->name);
+        free(e->outName);
         free(e);
         e = nx;
     }
