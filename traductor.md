@@ -6,7 +6,7 @@ make
 
 # 3. Traducir
 ./f1code ejemplos/F1Code.f1                 # genera ejemplos/F1Code.and
-./f1code ejemplos/F1Code.f1 -o salida.and   # o con el nombre que quieras
+./f1code ejemplos/F1Code.f1 -o salida.and   # o con el nombre del archivo que vamos a traducir
 
 # 4. Ver el resultado
 cat ejemplos/F1Code.and
