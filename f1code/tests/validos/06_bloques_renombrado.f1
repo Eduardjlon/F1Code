@@ -1,0 +1,14 @@
+// Declaraciones dentro de bloques y nombres reservados de Andante
+garage engine final := 3;
+garage engine inicio := 0;
+garage engine final_f1 := 100;   // obliga a buscar otro nombre para 'final'
+lap (inicio < final) {
+    garage fuel leer := 1.5;
+    leer boost inicio;
+    radio leer;
+    inicio boost 1;
+}
+radio leer;          // F1Code tiene tabla global: leer sigue declarada
+radio final_f1;
+finish;
+radio 0;             // inalcanzable: genera advertencia y no se traduce

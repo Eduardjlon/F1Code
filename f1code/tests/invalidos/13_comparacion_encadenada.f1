@@ -1,0 +1,3 @@
+// comparaciones encadenadas no son validas
+garage engine a := 1;
+race (a < 2 < 3) { radio a; }

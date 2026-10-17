@@ -1,0 +1,15 @@
+// Codigo Andante generado por f1code (Grupo 1) desde 01_demo_contrato.f1
+
+numero hamilton = 300;
+decimal leclerc = 50.5;
+leer hamilton;
+virar (hamilton > 250) inicio
+    caminar hamilton;
+final
+sino inicio
+    caminar leclerc;
+final
+historia (hamilton > 200) inicio
+    avanzar hamilton = hamilton + (-10);
+    caminar hamilton;
+final

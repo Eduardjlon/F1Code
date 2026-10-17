@@ -1,0 +1,3 @@
+// Contrato: falta expresion despues de :=
+garage engine hamilton := 1;
+hamilton := ;

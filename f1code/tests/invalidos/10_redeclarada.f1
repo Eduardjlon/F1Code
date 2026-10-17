@@ -1,0 +1,3 @@
+// variable redeclarada
+garage engine hamilton := 300;
+garage fuel hamilton := 1.5;

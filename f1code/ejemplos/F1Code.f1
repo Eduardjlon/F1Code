@@ -1,0 +1,27 @@
+garage engine contador := 0;
+garage engine limite := 0;
+garage fuel total := 0.0;
+garage fuel precio_base := 0.0;
+garage fuel resultado_final := 0.0;
+
+contador := 0;
+total := 0.00;
+precio_base := 15.50;
+
+radio contador;
+pitstop limite;
+
+lap (contador < limite) {
+    contador := (contador + 1);
+   race (contador > 5) {
+        total := (total + (precio_base * 2.00));
+        radio total;
+    } overtake {
+        total := (total + precio_base);
+    }
+}
+
+resultado_final := ((total / 2.00) + 100.25);
+radio resultado_final;
+
+finish;

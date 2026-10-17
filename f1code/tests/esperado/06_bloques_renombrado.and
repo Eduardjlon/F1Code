@@ -1,0 +1,15 @@
+// Codigo Andante generado por f1code (Grupo 1) desde 06_bloques_renombrado.f1
+
+decimal leer_f1 = 0.0;
+
+numero final_f1_f1 = 3;
+numero inicio_f1 = 0;
+numero final_f1 = 100;
+historia (inicio_f1 < final_f1_f1) inicio
+    avanzar leer_f1 = 1.5;
+    avanzar leer_f1 = leer_f1 + inicio_f1;
+    caminar leer_f1;
+    avanzar inicio_f1 = inicio_f1 + 1;
+final
+caminar leer_f1;
+caminar final_f1;

@@ -1,0 +1,12 @@
+// finish dentro de un race que esta dentro de un lap
+garage engine vuelta := 0;
+pitstop vuelta;
+lap (vuelta < 10) {
+    race (vuelta == 7) {
+        radio 777;
+        finish;
+    }
+    radio vuelta;
+    vuelta boost 1;
+}
+radio 999;   // solo se imprime si nunca se llego a la vuelta 7

@@ -1,0 +1,31 @@
+// carrera.f1 — Ejemplo completo de F1Code
+// Simula una carrera: se pide el numero de vueltas y se reporta el progreso.
+
+garage engine vueltas := 0;          // declaracion entera
+garage fuel combustible := 100.0;    // declaracion real
+garage engine vuelta := 1;
+
+pitstop vueltas;                     // entrada de datos
+
+/* Si la carrera es muy larga, avisamos;
+   si no, mostramos el combustible inicial */
+race (vueltas > 50) {
+    radio 999;
+} overtake {
+    radio combustible;
+}
+
+lap (vuelta <= vueltas) {            // ciclo
+    combustible := combustible - 2.5 * 3;   // precedencia: * antes que -
+    radio vuelta;
+
+    race (combustible < 10.0) {      // se acaba el combustible
+        radio 0;
+        finish;                      // termina el programa
+    }
+
+    vuelta boost 1;                  // incremento compuesto
+}
+
+radio (vuelta - 1) * 2;              // parentesis fuerzan el orden
+finish;

@@ -1,0 +1,3 @@
+// boost con fuel sobre una variable engine
+garage engine hamilton := 300;
+hamilton boost 1.5;

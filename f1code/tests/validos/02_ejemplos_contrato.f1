@@ -1,0 +1,7 @@
+// Los 6 ejemplos validos de la seccion 7 del contrato
+garage engine hamilton := 300;
+garage fuel verstappen := 50.5;
+pitstop hamilton;
+radio hamilton;
+race (hamilton > 250) { radio hamilton; } overtake { radio verstappen; }
+lap (hamilton > 200) { hamilton boost -10; }

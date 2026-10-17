@@ -1,0 +1,2 @@
+// division entre cero
+garage engine hamilton := 300 / 0;

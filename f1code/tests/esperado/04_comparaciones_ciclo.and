@@ -1,0 +1,33 @@
+// Codigo Andante generado por f1code (Grupo 1) desde 04_comparaciones_ciclo.f1
+
+numero i = 0;
+numero suma = 0;
+historia (i < 5) inicio
+    avanzar suma = suma + i;
+    avanzar i = i + 1;
+final
+caminar suma;
+virar (suma == 10) inicio
+    caminar 1;
+final
+sino inicio
+    caminar 0;
+final
+virar (suma != 10) inicio
+    caminar 1;
+final
+sino inicio
+    caminar 0;
+final
+virar (suma <= 10) inicio
+    caminar 1;
+final
+virar (suma >= 11) inicio
+    caminar 1;
+final
+sino inicio
+    caminar 0;
+final
+virar (suma > 9) inicio
+    caminar 1;
+final

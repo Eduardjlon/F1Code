@@ -1,0 +1,3 @@
+// asignacion con = en lugar de :=
+garage engine a := 1;
+a = 5;

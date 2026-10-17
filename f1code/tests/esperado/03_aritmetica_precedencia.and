@@ -1,0 +1,18 @@
+// Codigo Andante generado por f1code (Grupo 1) desde 03_aritmetica_precedencia.f1
+
+numero a = 2 + (3 * 4);
+numero b = (2 + 3) * 4;
+numero c = 7 / 2;
+decimal d = 7 / 2.0;
+decimal e = a;
+numero f = (a - b) - c;
+numero g = ((-a) * 2) + (-(b - 1));
+caminar a;
+caminar b;
+caminar c;
+caminar d;
+caminar e;
+caminar f;
+caminar g;
+avanzar e = e + 0.25;
+caminar e;

@@ -1,0 +1,13 @@
+// Las 6 comparaciones y un ciclo con contador
+garage engine i := 0;
+garage engine suma := 0;
+lap (i < 5) {
+    suma boost i;
+    i boost 1;
+}
+radio suma;
+race (suma == 10) { radio 1; } overtake { radio 0; }
+race (suma != 10) { radio 1; } overtake { radio 0; }
+race (suma <= 10) { radio 1; }
+race (suma >= 11) { radio 1; } overtake { radio 0; }
+race (suma > 9) { radio 1; }

@@ -1,0 +1,3 @@
+// Contrato: faltan parentesis en la condicion
+garage engine hamilton := 300;
+race hamilton > 250 { radio hamilton; }

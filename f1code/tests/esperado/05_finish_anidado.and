@@ -1,0 +1,19 @@
+// Codigo Andante generado por f1code (Grupo 1) desde 05_finish_anidado.f1
+
+numero f1_fin = 0;
+
+numero vuelta = 0;
+leer vuelta;
+historia (f1_fin == 0 && vuelta < 10) inicio
+    virar (vuelta == 7) inicio
+        caminar 777;
+        avanzar f1_fin = 1;
+    final
+    virar (f1_fin == 0) inicio
+        caminar vuelta;
+        avanzar vuelta = vuelta + 1;
+    final
+final
+virar (f1_fin == 0) inicio
+    caminar 999;
+final

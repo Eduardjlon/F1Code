@@ -1,0 +1,28 @@
+// Codigo Andante generado por f1code (Grupo 1) desde carrera.f1
+
+numero f1_fin = 0;
+
+numero vueltas = 0;
+decimal combustible = 100.0;
+numero vuelta = 1;
+leer vueltas;
+virar (vueltas > 50) inicio
+    caminar 999;
+final
+sino inicio
+    caminar combustible;
+final
+historia (f1_fin == 0 && vuelta <= vueltas) inicio
+    avanzar combustible = combustible - (2.5 * 3);
+    caminar vuelta;
+    virar (combustible < 10.0) inicio
+        caminar 0;
+        avanzar f1_fin = 1;
+    final
+    virar (f1_fin == 0) inicio
+        avanzar vuelta = vuelta + 1;
+    final
+final
+virar (f1_fin == 0) inicio
+    caminar (vuelta - 1) * 2;
+final

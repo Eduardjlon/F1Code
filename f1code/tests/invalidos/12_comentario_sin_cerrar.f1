@@ -1,0 +1,4 @@
+// comentario de bloque sin cerrar
+garage engine hamilton := 300;
+/* nunca se cierra
+radio hamilton;

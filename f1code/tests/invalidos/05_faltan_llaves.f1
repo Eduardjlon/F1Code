@@ -1,0 +1,3 @@
+// Contrato: faltan llaves en el cuerpo
+garage engine hamilton := 300;
+lap (hamilton > 200) radio hamilton;

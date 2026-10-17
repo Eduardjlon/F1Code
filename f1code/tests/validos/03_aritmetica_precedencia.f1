@@ -1,0 +1,17 @@
+// Precedencia, parentesis, division entera y mezcla de tipos
+garage engine a := 2 + 3 * 4;        // 14
+garage engine b := (2 + 3) * 4;      // 20
+garage engine c := 7 / 2;            // 3 (division entera)
+garage fuel d := 7 / 2.0;            // 3.50
+garage fuel e := a;                  // engine -> fuel permitido
+garage engine f := a - b - c;        // asociatividad izquierda: -9
+garage engine g := -a * 2 + -(b - 1);
+radio a;
+radio b;
+radio c;
+radio d;
+radio e;
+radio f;
+radio g;
+e boost 0.25;
+radio e;

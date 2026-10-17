@@ -1,0 +1,12 @@
+# Artefactos de compilación (se regeneran con make)
+f1code/build/
+f1code/f1code
+f1code/f1code.exe
+*.o
+
+# Salidas de pruebas
+f1code/tests/salida/
+f1code/tests/*.and
+
+# IDE
+.idea/workspace.xml
