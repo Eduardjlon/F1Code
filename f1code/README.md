@@ -23,7 +23,7 @@ make                                   # genera ./f1code
 ./f1code tests/valido.f1               # genera tests/valido.and
 ./f1code programa.f1 -o salida.and     # nombre de salida propio
 ./f1code programa.f1 --ast --tabla     # además imprime el AST y la tabla de símbolos
-make test                              # 30 pruebas: válidas, inválidas y .and esperado
+make test                              # 31 pruebas: válidas, inválidas y .and esperado
 make clean
 ```
 

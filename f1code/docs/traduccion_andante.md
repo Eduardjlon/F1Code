@@ -21,6 +21,7 @@ reescrituras en el generador, así que Andante recibe solo instrucciones que ya 
 | `radio e;` | `caminar e;` |
 | `race (c) { A }` | `virar (c) inicio A final` |
 | `race (c) { A } overtake { B }` | `virar (c) inicio A final sino inicio B final` |
+| `race (c1) { A } overtake race (c2) { B }` | `virar (c1) inicio A final sino inicio virar (c2) inicio B final final` (else if) |
 | `lap (c) { A }` | `historia (c) inicio A final` |
 | `stint (I; c; P) { A }` | `I` traducido + `historia (c) inicio A P final` (ver sección 3) |
 | `finish;` | ver sección 3 |

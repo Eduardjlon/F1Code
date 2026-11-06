@@ -214,7 +214,7 @@ Códigos de salida: `0` traducción correcta · `1` el programa tiene errores ·
 | `pitstop` | Entrada de datos |
 | `radio` | Salida de datos |
 | `race` | Condicional (`if`) |
-| `overtake` | Alternativa (`else`) |
+| `overtake` | Alternativa (`else`); `overtake race (...)` es el `else if` |
 | `lap` | Ciclo (`while`) |
 | `stint` | Ciclo para (`for`): `stint (init; cond; paso) { ... }` |
 | `boost` | Incremento compuesto: `id boost expr` ≡ `id := id + expr` |
@@ -285,7 +285,7 @@ entrada       -> 'pitstop' IDENT ';'
 salida        -> 'radio' expr ';'
 
 condicional   -> 'race' '(' cond ')' '{' lista_sent '}'
-                 ( 'overtake' '{' lista_sent '}' )?
+                 ( 'overtake' '{' lista_sent '}' | 'overtake' condicional )?
 
 ciclo         -> 'lap' '(' cond ')' '{' lista_sent '}'
 ciclo_para    -> 'stint' '(' stint_init ';' cond ';' stint_paso ')' '{' lista_sent '}'
@@ -377,7 +377,7 @@ Casos que el compilador debe rechazar, y por qué:
 make test
 ```
 
-Corre la batería completa (30 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
+Corre la batería completa (31 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
 
 | Válidas | Qué cubren |
 |---|---|
@@ -391,6 +391,7 @@ Corre la batería completa (30 pruebas): cada programa de `tests/validos/` debe 
 | 08_chassis_generico | Declaración genérica `chassis`: inferencia entera, real, mixta, desde variable y dentro de un ciclo |
 | 09_stint_ciclo_para | `stint` con declaración y con asignación, paso con `boost` y `:=`, anidado, cuerpo vacío y con `finish` |
 | 10_podium_retorno | `podium` anidado (`lap` + `race`), en `race`/`overtake`, al final y con código inalcanzable |
+| 11_overtake_race | `else if` con `overtake race`, con y sin `overtake` final |
 
 | Inválidas | Error esperado |
 |---|---|

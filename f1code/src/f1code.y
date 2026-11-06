@@ -107,6 +107,9 @@ condicional:
 opt_overtake:
       %empty                              { $$ = NULL; }
     | OVERTAKE LBRACE lista_sent RBRACE   { $$ = $3; }
+    /* Condicional Si No (else if): overtake race (c) { ... } es un race anidado en el overtake.
+       Sin conflictos: despues de overtake viene '{' (else) o 'race' (else if). */
+    | OVERTAKE condicional                { $$ = $2; }
     ;
 
 ciclo:
