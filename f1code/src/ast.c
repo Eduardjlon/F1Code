@@ -120,6 +120,22 @@ ASTNode *newFloatLit(double v, int line) {
     return n;
 }
 
+ASTNode *newTextLit(char *s, int line) {
+    ASTNode *n = allocNode(ND_TEXT, line);
+    n->name = s;
+    return n;
+}
+
+const char *typeName(VarType t) {
+    switch (t) {
+        case TYPE_INT:     return "engine";
+        case TYPE_FLOAT:   return "fuel";
+        case TYPE_TEXT:    return "pilot";
+        case TYPE_GENERIC: return "chassis";
+        default:           return "?";
+    }
+}
+
 ASTNode *newVar(char *name, int line) {
     ASTNode *n = allocNode(ND_VAR, line);
     n->name = name;
@@ -136,6 +152,7 @@ static void printExpr(ASTNode *n) {
         case ND_INT:   printf("%d", n->ival); break;
         case ND_FLOAT: printf("%g", n->fval); break;
         case ND_VAR:   printf("%s", n->name); break;
+        case ND_TEXT:  printf("'%s'", n->name); break;
         case ND_BINOP:
             if (strcmp(n->op, "neg") == 0) {
                 printf("-(");
@@ -176,11 +193,11 @@ void printAST(ASTNode *node, int indent) {
             break;
         case ND_DECL:
             if (node->isGeneric)
-                printf("Decl (chassis -> %s) %s := ",
-                       node->vtype == TYPE_INT ? "engine" : node->vtype == TYPE_FLOAT ? "fuel" : "?",
-                       node->name);
+                printf("Decl (chassis -> %s) %s := ", typeName(node->vtype), node->name);
+            else if (node->promoted)
+                printf("Decl (%s -> pilot) %s := ", typeName(node->promotedFrom), node->name);
             else
-                printf("Decl (%s) %s := ", node->vtype == TYPE_INT ? "engine" : "fuel", node->name);
+                printf("Decl (%s) %s := ", typeName(node->vtype), node->name);
             printExpr(node->expr);
             printf("   [linea %d]\n", node->line);
             break;

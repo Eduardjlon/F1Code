@@ -210,7 +210,8 @@ Códigos de salida: `0` traducción correcta · `1` el programa tiene errores ·
 | `garage` | Inicia la declaración de una variable |
 | `engine` | Tipo entero |
 | `fuel` | Tipo real (decimal) |
-| `chassis` | Tipo genérico: toma el tipo (`engine` o `fuel`) de su valor inicial |
+| `chassis` | Tipo genérico: toma el tipo (`engine`, `fuel` o `pilot`) de su valor inicial |
+| `pilot` | Tipo texto (cadena): `garage pilot piloto := 'Alex';` |
 | `pitstop` | Entrada de datos |
 | `radio` | Salida de datos |
 | `race` | Condicional (`if`) |
@@ -228,6 +229,7 @@ Códigos de salida: `0` traducción correcta · `1` el programa tiene errores ·
 | Identificador | `[a-zA-Z_][a-zA-Z0-9_]*` | `hamilton`, `_vel2` |
 | Entero (`engine`) | `[0-9]+` | `300` |
 | Real (`fuel`) | `[0-9]+\.[0-9]+` | `50.5` |
+| Texto (`pilot`) | `'...'` o `"..."` (en una sola línea; admite escapes como `\n` y `\"`) | `'Alex'`, `"Ferrari"` |
 
 **Declaración genérica (`chassis`).** Como en la F1 el chasis recibe el motor que le monten,
 `garage chassis` declara una variable cuyo tipo se infiere del valor inicial:
@@ -277,7 +279,7 @@ sentencia     -> declaracion | asignacion | incremento
                | condicional | ciclo | ciclo_para | fin_stmt | retorno
 
 declaracion   -> 'garage' tipo IDENT ':=' expr ';'
-tipo          -> 'engine' | 'fuel' | 'chassis'
+tipo          -> 'engine' | 'fuel' | 'chassis' | 'pilot'
 
 asignacion    -> IDENT ':=' expr ';'
 incremento    -> IDENT 'boost' expr ';'
@@ -299,7 +301,7 @@ OP_COMP       -> '<' | '>' | '<=' | '>=' | '==' | '!='
 
 expr          -> expr '+' term | expr '-' term | term
 term          -> term '*' factor | term '/' factor | factor
-factor        -> ENTERO | REAL | IDENT | '(' expr ')' | '-' factor
+factor        -> ENTERO | REAL | TEXTO | IDENT | '(' expr ')' | '-' factor
 ```
 
 > `'-' factor` (menos unario) no aparece en la sección 5 del contrato, pero el contrato lo usa en el ejemplo válido 6 y en el programa demostrativo (`hamilton boost -10;`), y el token `-` ya existe. El parser lo acepta para que esos ejemplos sean válidos.
@@ -363,6 +365,7 @@ Casos que el compilador debe rechazar, y por qué:
 | `garage chassis hamilton;` | `chassis` necesita valor inicial para inferir el tipo |
 | `stint (v := 1; v <= 5) { ... }` | Al `stint` le falta el paso |
 | `podium;` | `podium` necesita un valor (para terminar sin valor se usa `finish`) |
+| `radio piloto + 1;` | Un texto no se opera con `+ - * /` |
 | `garage engine hamilton := 300` | Falta el `;` final |
 | `hamilton := ;` | Falta la expresión después de `:=` |
 | `race hamilton > 250 { ... }` | Faltan los paréntesis en la condición |
@@ -377,7 +380,7 @@ Casos que el compilador debe rechazar, y por qué:
 make test
 ```
 
-Corre la batería completa (31 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
+Corre la batería completa (40 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
 
 | Válidas | Qué cubren |
 |---|---|
@@ -392,6 +395,9 @@ Corre la batería completa (31 pruebas): cada programa de `tests/validos/` debe 
 | 09_stint_ciclo_para | `stint` con declaración y con asignación, paso con `boost` y `:=`, anidado, cuerpo vacío y con `finish` |
 | 10_podium_retorno | `podium` anidado (`lap` + `race`), en `race`/`overtake`, al final y con código inalcanzable |
 | 11_overtake_race | `else if` con `overtake race`, con y sin `overtake` final |
+| 12_texto_pilot | `pilot`, comillas simples y dobles, `radio`/`pitstop` con texto, `==`/`!=`, texto en bloque y patrón del Grupo 2 |
+| 13_prueba_real_grupo2 | Programa real generado por el Grupo 2 desde Dara, sin modificar |
+| 14_texto_casos_limite | Texto vacío, acentos, comillas anidadas, escapes (`\n`, `\"`), texto en `stint` y en `podium` |
 
 | Inválidas | Error esperado |
 |---|---|
@@ -406,6 +412,7 @@ Corre la batería completa (31 pruebas): cada programa de `tests/validos/` debe 
 | 16 | `chassis` sin valor inicial |
 | 17, 18 | `stint` sin paso / con variable no declarada |
 | 19, 20 | `podium` sin valor / con variable no declarada |
+| 21–26 | Texto: aritmética, sin cerrar, comparado con número, con `<`, número a `pilot`, texto a un `engine` calculado |
 
 `tests/valido.f1` y `tests/invalido.f1` son los programas de la Entrega 2.
 
@@ -498,6 +505,13 @@ Cada nodo guarda la línea donde se reconoció. Es lo que permite dar mensajes d
 (Dara la tiene con `nepew repealpa`). Se resuelve con inferencia estática (como `auto` en C++ o `var`
 en Java): el tipo sale del valor inicial y queda fijo, así que el resto de las reglas no cambia y
 Andante recibe `numero` o `decimal`, nunca un tipo nuevo.
+
+**Texto y compatibilidad con el Grupo 2.**
+La prueba final pasa por toda la cadena hasta C11, así que no se puede omitir ninguna instrucción. El traductor
+del Grupo 2 declara cada variable con un valor por defecto (`garage engine Jugador1 := 0;`) y después le asigna
+el valor real (`Jugador1 := 'Alex';`). F1Code acepta texto (`pilot`), y una variable declarada con un valor
+literal por defecto que después recibe un texto se toma como `pilot`, con advertencia. Si el valor inicial es
+un cálculo, no hay duda de que es numérica y asignarle texto sigue siendo error.
 
 **Traducción a Andante sin modificar F1Code.**
 Lo que Andante no tiene se resuelve con reglas semánticas y en el generador: `boost` se reescribe como `avanzar x = x + (e)`, un `finish` dentro de un bloque usa una variable bandera, las declaraciones dentro de bloques se suben al inicio y los identificadores que chocan con palabras de Andante se renombran. `stint` se reescribe como `historia` con el paso al final del cuerpo, y `podium` guarda su valor en `f1_podio` y se detiene con la misma bandera de `finish`. Ver [`f1code/docs/traduccion_andante.md`](f1code/docs/traduccion_andante.md).

@@ -25,7 +25,7 @@ int synErrorCount = 0;
     struct ASTNode *node;
 }
 
-%token GARAGE "garage" ENGINE "engine" FUEL "fuel" CHASSIS "chassis" PITSTOP "pitstop" RADIO "radio"
+%token GARAGE "garage" ENGINE "engine" FUEL "fuel" CHASSIS "chassis" PILOT "pilot" PITSTOP "pitstop" RADIO "radio"
 %token RACE "race" OVERTAKE "overtake" LAP "lap" STINT "stint" BOOST "boost" FINISH "finish" PODIUM "podium"
 %token ASSIGN ":=" LE "<=" GE ">=" EQ "==" NE "!=" LT "<" GT ">"
 %token PLUS "+" MINUS "-" TIMES "*" DIVIDE "/"
@@ -33,6 +33,7 @@ int synErrorCount = 0;
 %token <ival> ENTERO "numero entero"
 %token <fval> REAL   "numero real"
 %token <sval> IDENT  "identificador"
+%token <sval> TEXTO  "texto"
 
 %type <node> programa lista_sent sentencia declaracion asignacion incremento
 %type <node> entrada salida condicional ciclo fin_stmt opt_overtake
@@ -80,6 +81,8 @@ declaracion:
     | GARAGE FUEL   IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_FLOAT, $3, $5, @1.first_line); }
     /* Declaracion generica: el chasis toma el tipo del valor inicial (engine o fuel) */
     | GARAGE CHASSIS IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_GENERIC, $3, $5, @1.first_line); }
+    /* Texto: el piloto es un nombre */
+    | GARAGE PILOT  IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_TEXT,  $3, $5, @1.first_line); }
     ;
 
 asignacion:
@@ -173,6 +176,7 @@ term:
 factor:
       ENTERO               { $$ = newIntLit($1, @1.first_line); }
     | REAL                 { $$ = newFloatLit($1, @1.first_line); }
+    | TEXTO                { $$ = newTextLit($1, @1.first_line); }
     | IDENT                { $$ = newVar($1, @1.first_line); }
     | LPAREN expr RPAREN   { $$ = $2; }
     | MINUS factor         { $$ = newNeg($2, @1.first_line); }   /* lo usa el contrato: boost -10 */

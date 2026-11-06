@@ -4,6 +4,7 @@
  *   garage engine x := e;     ->  numero x = e;
  *   garage fuel x := e;       ->  decimal x = e;
  *   garage chassis x := e;    ->  numero o decimal, segun el tipo inferido de e
+ *   garage pilot x := 'A';    ->  texto x = "A";  (los textos salen con comillas dobles)
  *   x := e;                   ->  avanzar x = e;
  *   x boost e;                ->  avanzar x = x + (e);
  *   pitstop x;                ->  leer x;
@@ -118,7 +119,30 @@ static const char *outName(const char *f1Name) {
 }
 
 static const char *andanteType(VarType t) {
-    return t == TYPE_FLOAT ? "decimal" : "numero";
+    return t == TYPE_FLOAT ? "decimal" : t == TYPE_TEXT ? "texto" : "numero";
+}
+
+/* Valor neutro de cada tipo (declaraciones subidas al inicio y f1_podio) */
+static const char *neutralValue(VarType t) {
+    return t == TYPE_FLOAT ? "0.0" : t == TYPE_TEXT ? "\"\"" : "0";
+}
+
+/* Literal de texto de Andante: entre comillas dobles. Las secuencias de escape del
+   original (\n, \t, \") pasan tal cual; una " sin escapar (de un texto con comillas
+   simples, como 'dijo "hola"') se escapa para no cerrar el texto antes de tiempo. */
+static void emitText(Buf *b, const char *s) {
+    bufPrintf(b, "\"");
+    for (; *s; s++) {
+        if (*s == '\\' && s[1]) {
+            bufPrintf(b, "%c%c", s[0], s[1]);
+            s++;
+        } else if (*s == '"') {
+            bufPrintf(b, "\\\"");
+        } else {
+            bufPrintf(b, "%c", *s);
+        }
+    }
+    bufPrintf(b, "\"");
 }
 
 /* El real mas corto que vuelve exactamente al mismo valor: 50.5, 0.25, 3.0 */
@@ -146,20 +170,21 @@ static int nestedFinish(ASTNode *s, int level) {
     return 0;
 }
 
-/* Busca los podium alcanzables: *found = 1 si hay alguno, *isFloat = 1 si alguno devuelve fuel */
-static void scanReturns(ASTNode *s, int *found, int *isFloat) {
+/* Busca los podium alcanzables: *found = 1 si hay alguno; *rtype = tipo de f1_podio
+   (fuel si alguno devuelve fuel, pilot si devuelven texto; semantico.c impide mezclar texto y numero) */
+static void scanReturns(ASTNode *s, int *found, VarType *rtype) {
     for (; s; s = s->next) {
         if (s->type == ND_RETURN) {
             *found = 1;
-            if (s->expr->etype == TYPE_FLOAT) *isFloat = 1;
+            if (s->expr->etype == TYPE_FLOAT || s->expr->etype == TYPE_TEXT) *rtype = s->expr->etype;
         }
         if (isStop(s)) return;
         if (s->type == ND_IF) {
-            scanReturns(s->thenBody, found, isFloat);
-            scanReturns(s->elseBody, found, isFloat);
+            scanReturns(s->thenBody, found, rtype);
+            scanReturns(s->elseBody, found, rtype);
         }
         if (s->type == ND_WHILE || s->type == ND_FOR)
-            scanReturns(s->thenBody, found, isFloat);
+            scanReturns(s->thenBody, found, rtype);
     }
 }
 
@@ -176,6 +201,9 @@ static void emitExpr(Buf *b, ASTNode *e, int asChild) {
         case ND_FLOAT:
             formatReal(num, sizeof num, e->fval);
             bufPrintf(b, "%s", num);
+            break;
+        case ND_TEXT:
+            emitText(b, e->name);
             break;
         case ND_VAR:
             bufPrintf(b, "%s", outName(e->name));
@@ -219,8 +247,7 @@ static void emitStmt(ASTNode *s, int level, int depth) {
                 bufPrintf(&body, "%s %s = ", andanteType(s->vtype), name);
             } else {
                 /* se sube la declaracion y aqui queda la asignacion */
-                bufPrintf(&decls, "%s %s = %s;\n", andanteType(s->vtype), name,
-                          s->vtype == TYPE_FLOAT ? "0.0" : "0");
+                bufPrintf(&decls, "%s %s = %s;\n", andanteType(s->vtype), name, neutralValue(s->vtype));
                 bufPrintf(&body, "avanzar %s = ", name);
             }
             emitExpr(&body, s->expr, 0);
@@ -379,10 +406,11 @@ char *generateAndante(ASTNode *program, SymTable *t, const char *source) {
     podio = NULL;
 
     ASTNode *stmts = program ? program->thenBody : NULL;
-    int hasReturn = 0, returnFloat = 0;
+    int hasReturn = 0;
+    VarType returnType = TYPE_INT;
     assignNames();
     if (nestedFinish(stmts, 0)) flag = freeName("f1_fin");
-    scanReturns(stmts, &hasReturn, &returnFloat);
+    scanReturns(stmts, &hasReturn, &returnType);
     if (hasReturn) podio = freeName("f1_podio");
 
     emitList(stmts, 0, 0);
@@ -390,8 +418,7 @@ char *generateAndante(ASTNode *program, SymTable *t, const char *source) {
     bufPrintf(&out, "// Codigo Andante generado por f1code (Grupo 1) desde %s\n\n", baseName(source));
     if (decls.len) bufPrintf(&out, "%s", decls.d);
     if (flag) bufPrintf(&out, "numero %s = 0;\n", flag);
-    if (podio) bufPrintf(&out, "%s %s = %s;\n", returnFloat ? "decimal" : "numero", podio,
-                         returnFloat ? "0.0" : "0");
+    if (podio) bufPrintf(&out, "%s %s = %s;\n", andanteType(returnType), podio, neutralValue(returnType));
     if (decls.len || flag || podio) bufPrintf(&out, "\n");
     if (body.len) bufPrintf(&out, "%s", body.d);
 

@@ -12,6 +12,15 @@ static int commentLine = 0;
    devuelve al parser. Espacios y comentarios no tocan yylloc: asi un ';'
    faltante al final se reporta en la linea del ultimo token. */
 #define TOKEN(t) do { yylloc.first_line = yylloc.last_line = yylineno; return (t); } while (0)
+
+/* Copia el contenido de un literal de texto sin las comillas */
+static char *sinComillas(const char *s, int len) {
+    char *r = malloc((size_t)len - 1);
+    if (!r) exit(2);
+    memcpy(r, s + 1, (size_t)len - 2);
+    r[len - 2] = '\0';
+    return r;
+}
 %}
 
 %option noyywrap
@@ -41,6 +50,7 @@ ID      [a-zA-Z_][a-zA-Z0-9_]*
 "engine"    { TOKEN(ENGINE); }
 "fuel"      { TOKEN(FUEL); }
 "chassis"   { TOKEN(CHASSIS); }   /* declaracion generica: el tipo se infiere */
+"pilot"     { TOKEN(PILOT); }     /* tipo texto */
 "pitstop"   { TOKEN(PITSTOP); }
 "radio"     { TOKEN(RADIO); }
 "race"      { TOKEN(RACE); }
@@ -67,6 +77,15 @@ ID      [a-zA-Z_][a-zA-Z0-9_]*
 "{"   { TOKEN(LBRACE); }
 "}"   { TOKEN(RBRACE); }
 ";"   { TOKEN(SEMI); }
+
+  /* Texto entre comillas simples o dobles. Las secuencias de escape (\n, \t, \", \') se
+     conservan tal cual para que lleguen igual al C11 del final de la cadena. */
+\'([^'\\\n]|\\.)*\'    { yylval.sval = sinComillas(yytext, yyleng); TOKEN(TEXTO); }
+\"([^"\\\n]|\\.)*\"    { yylval.sval = sinComillas(yytext, yyleng); TOKEN(TEXTO); }
+\'([^'\\\n]|\\.)*|\"([^"\\\n]|\\.)*  {
+                          fprintf(stderr, "Error lexico en linea %d: texto sin cerrar %s\n", yylineno, yytext);
+                          lexErrorCount++;
+                      }
 
 {DIGIT}+"."{DIGIT}+   { yylval.fval = atof(yytext); TOKEN(REAL); }
 {DIGIT}+{ID}          {

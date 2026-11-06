@@ -23,7 +23,7 @@ make                                   # genera ./f1code
 ./f1code tests/valido.f1               # genera tests/valido.and
 ./f1code programa.f1 -o salida.and     # nombre de salida propio
 ./f1code programa.f1 --ast --tabla     # además imprime el AST y la tabla de símbolos
-make test                              # 31 pruebas: válidas, inválidas y .and esperado
+make test                              # 40 pruebas: válidas, inválidas y .and esperado
 make clean
 ```
 
@@ -61,6 +61,8 @@ docs/
    Desde ahí el tipo queda fijo. Se traduce a `numero` o `decimal` según el tipo inferido.
 7. `stint (init; cond; paso) { ... }` (ciclo para) se traduce como `init` + `historia (cond)` con el paso al final del cuerpo.
 8. `podium e;` (retorno) termina el programa entregando `e`; en Andante el valor queda en `f1_podio` y se detiene como `finish`.
+9. Texto: `garage pilot x := 'Alex';` → `texto x = "Alex";`. Solo se compara con `==`/`!=`. Una variable
+   declarada con un valor por defecto (`:= 0`) que después recibe texto se toma como `pilot` (patrón del Grupo 2).
 
 La tabla de traducción completa, cómo se traduce `finish` dentro de bloques, las declaraciones
 dentro de bloques y el renombrado de identificadores están en

@@ -15,6 +15,8 @@ reescrituras en el generador, así que Andante recibe solo instrucciones que ya 
 | `garage engine x := e;` | `numero x = e;` |
 | `garage fuel x := e;` | `decimal x = e;` |
 | `garage chassis x := e;` | `numero x = e;` si `e` es entera · `decimal x = e;` si `e` es real |
+| `garage pilot x := 'Alex';` | `texto x = "Alex";` |
+| `'Alex'` o `"Alex"` | `"Alex"` (siempre con comillas dobles) |
 | `x := e;` | `avanzar x = e;` |
 | `x boost e;` | `avanzar x = x + (e);` |
 | `pitstop x;` | `leer x;` |
@@ -52,7 +54,15 @@ reescrituras en el generador, así que Andante recibe solo instrucciones que ya 
    (F1Code no tiene funciones: el programa completo es la carrera y `podium` entrega el resultado). El valor es
    obligatorio; para terminar sin valor está `finish`. En el control de flujo se comporta igual que `finish`
    (regla 6), incluida la advertencia de código inalcanzable.
-10. El menos unario (`-10`, `-x`) se acepta porque el contrato lo usa en el ejemplo válido 6 y en el
+10. **Texto (`garage pilot`, literales `'Alex'` o `"Alex"`):** se asigna, se lee con `pitstop`, se imprime con
+    `radio` y se compara solo con `==` y `!=`. No se opera con `+ - * /`, no se usa con `boost` y no se mezcla
+    con `engine`/`fuel`. Un `chassis` con valor de texto queda como `pilot`.
+11. **Compatibilidad con el Grupo 2:** su traductor declara las variables con un valor por defecto
+    (`garage engine Jugador1 := 0;`) y después les asigna el valor real. Si una variable declarada con un
+    **valor literal** (`0`, `0.0`) recibe después un texto, se toma como `pilot` (con advertencia) y su valor
+    inicial pasa a ser `""`. Así **no se omite ninguna instrucción** del programa de prueba. Si el valor
+    inicial es un cálculo (`base * 2`), no es un valor por defecto y asignarle texto sigue siendo error.
+12. El menos unario (`-10`, `-x`) se acepta porque el contrato lo usa en el ejemplo válido 6 y en el
    programa demostrativo (`hamilton boost -10;`); el token `-` ya existe.
 
 ## 3. Reescrituras del generador
@@ -110,6 +120,17 @@ race (v == 7) {                   virar (v == 7) inicio
 - Es el único punto que depende de que Andante no tenga retorno: cuando el Grupo 8 publique su
   palabra de retorno, solo cambia `emitStop()` en `codegen_andante.c`.
 
+### Texto
+```
+garage engine Jugador1 := 0;          texto Jugador1 = "";
+Jugador1 := 'Alex';           →       avanzar Jugador1 = "Alex";
+radio 'Hola';                         caminar "Hola";
+```
+Los textos se generan con comillas dobles (como en C11, el final de la cadena). Las secuencias de
+escape del original (`\n`, `\t`, `\"`) pasan tal cual, y una `"` dentro de un texto con comillas simples
+se escapa (`'dijo "hola"'` → `"dijo \"hola\""`). Una declaración de
+texto dentro de un bloque se sube al inicio con `""`.
+
 ### Declaraciones dentro de bloques
 F1Code tiene tabla global, pero no sabemos si Andante tiene alcance por bloque. Toda
 declaración que quedaría dentro de un `inicio ... final` se sube al inicio del programa con
@@ -127,7 +148,7 @@ depender de la precedencia de Andante ni de los siguientes eslabones de la caden
 
 ## 4. Pendiente de confirmar
 
-**Con el Grupo 2:** `chassis`, `stint` y `podium` ya son palabras reservadas de F1Code (no se pueden usar
+**Con el Grupo 2:** `chassis`, `pilot`, `stint` y `podium` ya son palabras reservadas de F1Code (no se pueden usar
 como identificadores). Sintaxis: `garage chassis x := valor;`, `stint (init; cond; paso) { ... }` y
 `podium valor;`.
 
@@ -135,5 +156,6 @@ como identificadores). Sintaxis: `garage chassis x := valor;`, `stint (init; con
 el generador usa solo `historia`, `avanzar` y `virar`, que ya existen.
 
 - Que aceptan `&&` en la condición de `historia` (lo usa la bandera de `finish`).
+- Que sus textos usan comillas dobles (`"Alex"`) y que `leer` funciona con una variable `texto`.
 - Que aceptan literales como `0.0` y paréntesis alrededor del menos unario: `x + (-10)`.
 - Si una variable declarada dentro de `inicio ... final` es visible después (el generador ya no depende de esto).

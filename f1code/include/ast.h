@@ -5,6 +5,7 @@ typedef enum {
     TYPE_INT,
     TYPE_FLOAT,
     TYPE_GENERIC,   /* garage chassis: el tipo real lo infiere semantico.c */
+    TYPE_TEXT,      /* garage pilot: texto (cadena) */
     TYPE_ERROR      /* tipo desconocido por un error previo (semantico.c) */
 } VarType;
 
@@ -24,6 +25,7 @@ typedef enum {
     ND_RELOP,
     ND_INT,
     ND_FLOAT,
+    ND_TEXT,        /* literal de texto: 'Alex' o "Alex" (contenido en name) */
     ND_VAR
 } NodeType;
 
@@ -35,6 +37,8 @@ typedef struct ASTNode {
 
     VarType vtype;             /* usado por ND_DECL (chassis: se reemplaza por el tipo inferido) */
     int isGeneric;             /* 1 si la declaracion fue con 'garage chassis' */
+    VarType promotedFrom;      /* DECL tomada como pilot por recibir texto (ver semantico.c) */
+    int promoted;              /* 1 si promotedFrom es valido */
     char *name;                /* usado por DECL, ASSIGN, BOOST, INPUT, VAR */
     struct ASTNode *expr;      /* expr de inicializacion / asignacion / boost / output */
 
@@ -71,6 +75,8 @@ ASTNode *newRelOp(const char *op, ASTNode *left, ASTNode *right, int line);
 ASTNode *newNeg(ASTNode *val, int line);
 ASTNode *newIntLit(int v, int line);
 ASTNode *newFloatLit(double v, int line);
+ASTNode *newTextLit(char *s, int line);
+const char *typeName(VarType t);   /* engine, fuel, pilot... (para mensajes y --ast/--tabla) */
 ASTNode *newVar(char *name, int line);
 
 void printAST(ASTNode *node, int indent);
