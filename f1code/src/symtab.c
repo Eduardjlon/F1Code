@@ -44,7 +44,7 @@ void symtab_print(SymTable *t) {
     int n = 0;
     for (SymEntry *e = t->head; e != NULL && n < 256; e = e->next) arr[n++] = e;
     for (int i = n - 1; i >= 0; i--) {
-        printf("%-15s %-10s %d\n", arr[i]->name, arr[i]->type == TYPE_INT ? "engine" : "fuel", arr[i]->line);
+        printf("%-15s %-10s %d\n", arr[i]->name, arr[i]->type == TYPE_INT ? "engine" : arr[i]->type == TYPE_FLOAT ? "fuel" : "?", arr[i]->line);
     }
 }
 

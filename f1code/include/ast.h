@@ -4,6 +4,7 @@
 typedef enum {
     TYPE_INT,
     TYPE_FLOAT,
+    TYPE_GENERIC,   /* garage chassis: el tipo real lo infiere semantico.c */
     TYPE_ERROR      /* tipo desconocido por un error previo (semantico.c) */
 } VarType;
 
@@ -16,7 +17,9 @@ typedef enum {
     ND_OUTPUT,
     ND_IF,
     ND_WHILE,
+    ND_FOR,         /* stint (init; cond; paso) { cuerpo } */
     ND_FINISH,
+    ND_RETURN,      /* podium expr; */
     ND_BINOP,
     ND_RELOP,
     ND_INT,
@@ -30,13 +33,16 @@ typedef struct ASTNode {
 
     struct ASTNode *next;      /* siguiente sentencia en una lista */
 
-    VarType vtype;             /* usado por ND_DECL */
+    VarType vtype;             /* usado por ND_DECL (chassis: se reemplaza por el tipo inferido) */
+    int isGeneric;             /* 1 si la declaracion fue con 'garage chassis' */
     char *name;                /* usado por DECL, ASSIGN, BOOST, INPUT, VAR */
     struct ASTNode *expr;      /* expr de inicializacion / asignacion / boost / output */
 
     struct ASTNode *cond;      /* usado por IF, WHILE */
     struct ASTNode *thenBody;  /* usado por IF (true), WHILE (cuerpo) */
     struct ASTNode *elseBody;  /* usado por IF (overtake), puede ser NULL */
+    struct ASTNode *init;      /* usado por FOR: declaracion o asignacion inicial */
+    struct ASTNode *step;      /* usado por FOR: asignacion o boost del paso */
 
     char op[4];                /* "+","-","*","/","neg","<",">","<=",">=","==","!=" */
     struct ASTNode *left;
@@ -46,7 +52,7 @@ typedef struct ASTNode {
     double fval;
 
     VarType etype;             /* tipo inferido de una expresion (lo llena semantico.c) */
-    int hasFinish;             /* 1 si la sentencia contiene un finish (lo llena semantico.c) */
+    int hasFinish;             /* 1 si la sentencia contiene un finish o podium (lo llena semantico.c) */
 } ASTNode;
 
 ASTNode *newProgram(ASTNode *stmts);
@@ -57,7 +63,9 @@ ASTNode *newInput(char *name, int line);
 ASTNode *newOutput(ASTNode *expr, int line);
 ASTNode *newIf(ASTNode *cond, ASTNode *thenBody, ASTNode *elseBody, int line);
 ASTNode *newWhile(ASTNode *cond, ASTNode *body, int line);
+ASTNode *newFor(ASTNode *init, ASTNode *cond, ASTNode *step, ASTNode *body, int line);
 ASTNode *newFinish(int line);
+ASTNode *newReturn(ASTNode *expr, int line);
 ASTNode *newBinOp(const char *op, ASTNode *left, ASTNode *right, int line);
 ASTNode *newRelOp(const char *op, ASTNode *left, ASTNode *right, int line);
 ASTNode *newNeg(ASTNode *val, int line);

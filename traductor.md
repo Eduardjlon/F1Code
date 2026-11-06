@@ -25,4 +25,11 @@ cat tests/invalidos/09_no_declarada.f1      # ver el código con error
 ./f1code tests/invalidos/07_fuel_a_engine.f1      # error semántico
 
 # 7. Para comprobar que todo sigue funcionando:
-make test                                   # debe dar: 21 pasaron, 0 fallaron
+make test                                   # debe dar: 30 pasaron, 0 fallaron
+
+# 8. Declaración genérica (garage chassis): ver el tipo inferido en el AST y la tabla
+./f1code tests/validos/08_chassis_generico.f1 --ast --tabla
+
+# 9. Ciclo para (stint) y retorno (podium)
+./f1code tests/validos/09_stint_ciclo_para.f1 --ast -o salida.and && cat salida.and
+./f1code tests/validos/10_podium_retorno.f1 --ast -o salida.and && cat salida.and

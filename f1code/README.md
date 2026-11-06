@@ -23,7 +23,7 @@ make                                   # genera ./f1code
 ./f1code tests/valido.f1               # genera tests/valido.and
 ./f1code programa.f1 -o salida.and     # nombre de salida propio
 ./f1code programa.f1 --ast --tabla     # además imprime el AST y la tabla de símbolos
-make test                              # 20 pruebas: válidas, inválidas y .and esperado
+make test                              # 30 pruebas: válidas, inválidas y .and esperado
 make clean
 ```
 
@@ -40,7 +40,7 @@ src/
   f1code.y          gramática del contrato + AST, con recuperación de errores (Bison)
   ast.c             constructores e impresión del AST
   symtab.c          tabla de símbolos global
-  semantico.c       validaciones: declaración, tipos, división entre cero, finish
+  semantico.c       validaciones: declaración, tipos, división entre cero, finish/podium
   codegen_andante.c generador .and (único módulo que conoce Andante)
   main.c            línea de comandos
 tests/
@@ -57,6 +57,10 @@ docs/
 3. `engine` → `fuel` se permite; **`fuel` → `engine` es error**, porque Andante no tiene esa conversión.
 4. División entre la constante `0` es error.
 5. `finish` es válido en cualquier parte; lo que sigue en el mismo bloque es inalcanzable (advertencia).
+6. `garage chassis x := e;` (declaración genérica) toma el tipo de `e`: `engine` si es entera, `fuel` si es real.
+   Desde ahí el tipo queda fijo. Se traduce a `numero` o `decimal` según el tipo inferido.
+7. `stint (init; cond; paso) { ... }` (ciclo para) se traduce como `init` + `historia (cond)` con el paso al final del cuerpo.
+8. `podium e;` (retorno) termina el programa entregando `e`; en Andante el valor queda en `f1_podio` y se detiene como `finish`.
 
 La tabla de traducción completa, cómo se traduce `finish` dentro de bloques, las declaraciones
 dentro de bloques y el renombrado de identificadores están en

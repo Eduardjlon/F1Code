@@ -10,6 +10,14 @@
  *   4. Division entre la constante cero es error.
  *   5. finish es valido en cualquier parte; lo que sigue en el mismo
  *      bloque es inalcanzable (advertencia).
+ *   6. garage chassis x := e; (declaracion generica) toma el tipo de e:
+ *      engine si e es entera, fuel si es real. Desde ahi el tipo de x
+ *      queda fijo y aplican las reglas 2 y 3 como a cualquier variable.
+ *   7. stint (init; cond; paso) { cuerpo }: init, cond, cuerpo y paso se
+ *      validan como sentencias normales; la variable de control va a la
+ *      tabla global (sigue visible despues del ciclo).
+ *   8. podium e; (retorno) termina el programa entregando e: para el
+ *      control de flujo se comporta igual que finish (regla 5).
  */
 #include <stdarg.h>
 #include <stdio.h>
@@ -103,6 +111,8 @@ static int checkList(ASTNode *s) {
         switch (s->type) {
             case ND_DECL: {
                 VarType t = exprType(s->expr);    /* antes de insertar: x := x es error */
+                if (s->isGeneric)                 /* chassis: el tipo sale del valor inicial */
+                    s->vtype = t;
                 SymEntry *prev = symtab_lookup(table, s->name);
                 if (prev) {
                     semError(s->line, "la variable '%s' ya fue declarada en la linea %d", s->name, prev->line);
@@ -144,11 +154,20 @@ static int checkList(ASTNode *s) {
                 exprType(s->cond);
                 s->hasFinish = checkList(s->thenBody);
                 break;
+            case ND_FOR:
+                checkList(s->init);               /* init y paso son una sola sentencia (next == NULL) */
+                exprType(s->cond);
+                s->hasFinish = checkList(s->thenBody);
+                checkList(s->step);
+                break;
             case ND_FINISH:
+            case ND_RETURN:
+                if (s->type == ND_RETURN) exprType(s->expr);
                 s->hasFinish = 1;
                 if (s->next)
                     semWarning(s->next->line,
-                               "codigo inalcanzable despues de 'finish' (linea %d); no se traducira", s->line);
+                               "codigo inalcanzable despues de '%s' (linea %d); no se traducira",
+                               s->type == ND_RETURN ? "podium" : "finish", s->line);
                 break;
             default:
                 break;

@@ -19,6 +19,7 @@ ASTNode *newProgram(ASTNode *stmts) {
 ASTNode *newDecl(VarType vtype, char *name, ASTNode *expr, int line) {
     ASTNode *n = allocNode(ND_DECL, line);
     n->vtype = vtype;
+    n->isGeneric = (vtype == TYPE_GENERIC);
     n->name = name;
     n->expr = expr;
     return n;
@@ -65,8 +66,23 @@ ASTNode *newWhile(ASTNode *cond, ASTNode *body, int line) {
     return n;
 }
 
+ASTNode *newFor(ASTNode *init, ASTNode *cond, ASTNode *step, ASTNode *body, int line) {
+    ASTNode *n = allocNode(ND_FOR, line);
+    n->init = init;
+    n->cond = cond;
+    n->step = step;
+    n->thenBody = body;
+    return n;
+}
+
 ASTNode *newFinish(int line) {
     return allocNode(ND_FINISH, line);
+}
+
+ASTNode *newReturn(ASTNode *expr, int line) {
+    ASTNode *n = allocNode(ND_RETURN, line);
+    n->expr = expr;
+    return n;
 }
 
 ASTNode *newBinOp(const char *op, ASTNode *left, ASTNode *right, int line) {
@@ -159,7 +175,12 @@ void printAST(ASTNode *node, int indent) {
             printList(node->thenBody, indent + 1);
             break;
         case ND_DECL:
-            printf("Decl (%s) %s := ", node->vtype == TYPE_INT ? "engine" : "fuel", node->name);
+            if (node->isGeneric)
+                printf("Decl (chassis -> %s) %s := ",
+                       node->vtype == TYPE_INT ? "engine" : node->vtype == TYPE_FLOAT ? "fuel" : "?",
+                       node->name);
+            else
+                printf("Decl (%s) %s := ", node->vtype == TYPE_INT ? "engine" : "fuel", node->name);
             printExpr(node->expr);
             printf("   [linea %d]\n", node->line);
             break;
@@ -198,8 +219,24 @@ void printAST(ASTNode *node, int indent) {
             printf("   [linea %d]\n", node->line);
             printList(node->thenBody, indent + 1);
             break;
+        case ND_FOR:
+            printf("For ");
+            printExpr(node->cond);
+            printf("   [linea %d]\n", node->line);
+            indentPrint(indent + 1); printf("Init:\n");
+            printAST(node->init, indent + 2);
+            indentPrint(indent + 1); printf("Paso:\n");
+            printAST(node->step, indent + 2);
+            indentPrint(indent + 1); printf("Cuerpo:\n");
+            printList(node->thenBody, indent + 2);
+            break;
         case ND_FINISH:
             printf("Finish   [linea %d]\n", node->line);
+            break;
+        case ND_RETURN:
+            printf("Return ");
+            printExpr(node->expr);
+            printf("   [linea %d]\n", node->line);
             break;
         default:
             printf("<nodo desconocido>\n");
@@ -213,6 +250,8 @@ void freeAST(ASTNode *node) {
     freeAST(node->cond);
     freeAST(node->thenBody);
     freeAST(node->elseBody);
+    freeAST(node->init);
+    freeAST(node->step);
     freeAST(node->left);
     freeAST(node->right);
     free(node->name);

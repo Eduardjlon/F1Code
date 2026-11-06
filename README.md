@@ -50,7 +50,7 @@ race (hamilton > 250) {
 finish;
 ```
 
-El lenguaje cubre 10 capacidades obligatorias: declaración de variables, asignación, expresiones aritméticas, precedencia de operadores, comparaciones, entrada de datos, salida de datos, condicional con alternativa, ciclo `while` y comentarios.
+El lenguaje cubre 10 capacidades obligatorias: declaración de variables (incluida la genérica con `chassis`), asignación, expresiones aritméticas, precedencia de operadores, comparaciones, entrada de datos, salida de datos, condicional con alternativa, ciclo `while` y comentarios. Además tiene ciclo para (`stint`) y retorno (`podium`), para que F1Code tenga las mismas categorías que los demás lenguajes de la cadena.
 
 ---
 
@@ -192,7 +192,7 @@ final
 Ante un error, el traductor reporta la línea, lo que encontró y lo que esperaba, y no genera el `.and`:
 
 ```
-Error sintactico en linea 2: error de sintaxis: se encontro identificador, se esperaba engine o fuel
+Error sintactico en linea 2: error de sintaxis: se encontro identificador, se esperaba engine o fuel o chassis
 
 >> Compilacion ABORTADA: 0 error(es) lexico(s), 1 error(es) sintactico(s). No se genero tests/invalido.and
 ```
@@ -210,13 +210,16 @@ Códigos de salida: `0` traducción correcta · `1` el programa tiene errores ·
 | `garage` | Inicia la declaración de una variable |
 | `engine` | Tipo entero |
 | `fuel` | Tipo real (decimal) |
+| `chassis` | Tipo genérico: toma el tipo (`engine` o `fuel`) de su valor inicial |
 | `pitstop` | Entrada de datos |
 | `radio` | Salida de datos |
 | `race` | Condicional (`if`) |
 | `overtake` | Alternativa (`else`) |
 | `lap` | Ciclo (`while`) |
+| `stint` | Ciclo para (`for`): `stint (init; cond; paso) { ... }` |
 | `boost` | Incremento compuesto: `id boost expr` ≡ `id := id + expr` |
 | `finish` | Fin explícito del programa |
+| `podium` | Retorno: termina el programa entregando un valor (`podium e;` ≡ `return e;` del `main` en C) |
 
 ### Tipos y literales
 
@@ -225,6 +228,18 @@ Códigos de salida: `0` traducción correcta · `1` el programa tiene errores ·
 | Identificador | `[a-zA-Z_][a-zA-Z0-9_]*` | `hamilton`, `_vel2` |
 | Entero (`engine`) | `[0-9]+` | `300` |
 | Real (`fuel`) | `[0-9]+\.[0-9]+` | `50.5` |
+
+**Declaración genérica (`chassis`).** Como en la F1 el chasis recibe el motor que le monten,
+`garage chassis` declara una variable cuyo tipo se infiere del valor inicial:
+
+```f1
+garage chassis vueltas := 3;          // engine (entero)
+garage chassis tiempo := 81.25;       // fuel (real)
+garage chassis promedio := tiempo / vueltas;   // fuel (interviene un fuel)
+```
+
+El tipo queda fijo desde la declaración (`vueltas := 2.5;` sería error, igual que con `engine`)
+y el valor inicial es obligatorio. En Andante se traduce al tipo ya inferido: `numero` o `decimal`.
 
 Un identificador **no puede iniciar con dígito**: `1verstappen` produce un error léxico.
 
@@ -259,10 +274,10 @@ lista_sent    -> sentencia lista_sent | ε
 
 sentencia     -> declaracion | asignacion | incremento
                | entrada | salida
-               | condicional | ciclo | fin_stmt
+               | condicional | ciclo | ciclo_para | fin_stmt | retorno
 
 declaracion   -> 'garage' tipo IDENT ':=' expr ';'
-tipo          -> 'engine' | 'fuel'
+tipo          -> 'engine' | 'fuel' | 'chassis'
 
 asignacion    -> IDENT ':=' expr ';'
 incremento    -> IDENT 'boost' expr ';'
@@ -273,7 +288,11 @@ condicional   -> 'race' '(' cond ')' '{' lista_sent '}'
                  ( 'overtake' '{' lista_sent '}' )?
 
 ciclo         -> 'lap' '(' cond ')' '{' lista_sent '}'
+ciclo_para    -> 'stint' '(' stint_init ';' cond ';' stint_paso ')' '{' lista_sent '}'
+stint_init    -> 'garage' tipo IDENT ':=' expr | IDENT ':=' expr
+stint_paso    -> IDENT 'boost' expr | IDENT ':=' expr
 fin_stmt      -> 'finish' ';'
+retorno       -> 'podium' expr ';'
 
 cond          -> expr OP_COMP expr
 OP_COMP       -> '<' | '>' | '<=' | '>=' | '==' | '!='
@@ -317,6 +336,19 @@ lap (hamilton > 200) {
 finish;
 ```
 
+**Ciclo para y retorno:**
+
+```f1
+garage fuel tanque := 100.0;
+stint (garage engine vuelta := 1; vuelta <= 5; vuelta boost 1) {
+    tanque := tanque - 2.5;
+    race (tanque < 90.0) {
+        podium vuelta;          // termina el programa entregando la vuelta
+    }
+}
+podium 0;
+```
+
 > **Nota sobre `boost`:** siempre suma. Para restar se pasa una expresión negativa, como `hamilton boost -10`, que equivale a `hamilton := hamilton + (-10)`.
 
 ---
@@ -327,7 +359,10 @@ Casos que el compilador debe rechazar, y por qué:
 
 | Código | Error |
 |---|---|
-| `garage hamilton := 300;` | Falta el tipo (`engine` o `fuel`) |
+| `garage hamilton := 300;` | Falta el tipo (`engine`, `fuel` o `chassis`) |
+| `garage chassis hamilton;` | `chassis` necesita valor inicial para inferir el tipo |
+| `stint (v := 1; v <= 5) { ... }` | Al `stint` le falta el paso |
+| `podium;` | `podium` necesita un valor (para terminar sin valor se usa `finish`) |
 | `garage engine hamilton := 300` | Falta el `;` final |
 | `hamilton := ;` | Falta la expresión después de `:=` |
 | `race hamilton > 250 { ... }` | Faltan los paréntesis en la condición |
@@ -342,7 +377,7 @@ Casos que el compilador debe rechazar, y por qué:
 make test
 ```
 
-Corre la batería completa (20 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
+Corre la batería completa (30 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
 
 | Válidas | Qué cubren |
 |---|---|
@@ -352,6 +387,10 @@ Corre la batería completa (20 pruebas): cada programa de `tests/validos/` debe 
 | 04_comparaciones_ciclo | Las 6 comparaciones, ciclo con contador |
 | 05_finish_anidado | `finish` dentro de un `race` dentro de un `lap` |
 | 06_bloques_renombrado | Declaración dentro de un ciclo, nombres reservados de Andante, código inalcanzable |
+| 07_carrera | Ejemplo completo con `finish` anidado |
+| 08_chassis_generico | Declaración genérica `chassis`: inferencia entera, real, mixta, desde variable y dentro de un ciclo |
+| 09_stint_ciclo_para | `stint` con declaración y con asignación, paso con `boost` y `:=`, anidado, cuerpo vacío y con `finish` |
+| 10_podium_retorno | `podium` anidado (`lap` + `race`), en `race`/`overtake`, al final y con código inalcanzable |
 
 | Inválidas | Error esperado |
 |---|---|
@@ -362,6 +401,10 @@ Corre la batería completa (20 pruebas): cada programa de `tests/validos/` debe 
 | 12 | Comentario de bloque sin cerrar |
 | 13 | Comparaciones encadenadas |
 | 14 | `=` en lugar de `:=` |
+| 15 | `chassis` inferido como `engine` y luego se le asigna un `fuel` |
+| 16 | `chassis` sin valor inicial |
+| 17, 18 | `stint` sin paso / con variable no declarada |
+| 19, 20 | `podium` sin valor / con variable no declarada |
 
 `tests/valido.f1` y `tests/invalido.f1` son los programas de la Entrega 2.
 
@@ -448,11 +491,18 @@ Flex resuelve empates por longitud del match y, a igual longitud, por el orden d
 **Número de línea en cada nodo del AST.**
 Cada nodo guarda la línea donde se reconoció. Es lo que permite dar mensajes de error ubicados, y es la base sobre la que se apoyarán las validaciones semánticas.
 
-**Solo dos tipos numéricos.**
+**Solo dos tipos numéricos, más un genérico que se infiere.**
 `engine` (entero) y `fuel` (real) bastan para ejercitar las 10 capacidades obligatorias y para plantear el problema de conversión entre ellos, sin desviar el proyecto hacia un sistema de tipos que no es el objetivo del curso.
+`chassis` cubre la categoría de declaración genérica que tienen los demás lenguajes de la cadena
+(Dara la tiene con `nepew repealpa`). Se resuelve con inferencia estática (como `auto` en C++ o `var`
+en Java): el tipo sale del valor inicial y queda fijo, así que el resto de las reglas no cambia y
+Andante recibe `numero` o `decimal`, nunca un tipo nuevo.
 
 **Traducción a Andante sin modificar F1Code.**
-Lo que Andante no tiene se resuelve con reglas semánticas y en el generador: `boost` se reescribe como `avanzar x = x + (e)`, un `finish` dentro de un bloque usa una variable bandera, las declaraciones dentro de bloques se suben al inicio y los identificadores que chocan con palabras de Andante se renombran. Ver [`f1code/docs/traduccion_andante.md`](f1code/docs/traduccion_andante.md).
+Lo que Andante no tiene se resuelve con reglas semánticas y en el generador: `boost` se reescribe como `avanzar x = x + (e)`, un `finish` dentro de un bloque usa una variable bandera, las declaraciones dentro de bloques se suben al inicio y los identificadores que chocan con palabras de Andante se renombran. `stint` se reescribe como `historia` con el paso al final del cuerpo, y `podium` guarda su valor en `f1_podio` y se detiene con la misma bandera de `finish`. Ver [`f1code/docs/traduccion_andante.md`](f1code/docs/traduccion_andante.md).
+
+**`podium` como retorno del programa, sin funciones.**
+El retorno de los otros lenguajes es `return`. F1Code no tiene funciones, así que `podium` hace lo que hace `return` en el `main` de C: termina la ejecución entregando un resultado. Agregar funciones habría obligado a cambiar la tabla de símbolos, el generador y a inventar llamadas en Andante, que no las tiene; con esta decisión la categoría existe, se valida y se traduce sin romper la cadena.
 
 **Variables globales, tabla de símbolos plana.**
 F1Code no tiene funciones ni bloques con ámbito propio, así que no se requiere una pila de ámbitos. Si el lenguaje creciera con funciones, esa sería la primera estructura a cambiar.

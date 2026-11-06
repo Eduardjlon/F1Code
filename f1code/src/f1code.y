@@ -25,8 +25,8 @@ int synErrorCount = 0;
     struct ASTNode *node;
 }
 
-%token GARAGE "garage" ENGINE "engine" FUEL "fuel" PITSTOP "pitstop" RADIO "radio"
-%token RACE "race" OVERTAKE "overtake" LAP "lap" BOOST "boost" FINISH "finish"
+%token GARAGE "garage" ENGINE "engine" FUEL "fuel" CHASSIS "chassis" PITSTOP "pitstop" RADIO "radio"
+%token RACE "race" OVERTAKE "overtake" LAP "lap" STINT "stint" BOOST "boost" FINISH "finish" PODIUM "podium"
 %token ASSIGN ":=" LE "<=" GE ">=" EQ "==" NE "!=" LT "<" GT ">"
 %token PLUS "+" MINUS "-" TIMES "*" DIVIDE "/"
 %token LPAREN "(" RPAREN ")" LBRACE "{" RBRACE "}" SEMI ";"
@@ -36,6 +36,7 @@ int synErrorCount = 0;
 
 %type <node> programa lista_sent sentencia declaracion asignacion incremento
 %type <node> entrada salida condicional ciclo fin_stmt opt_overtake
+%type <node> ciclo_para stint_init stint_paso retorno
 %type <node> cond expr term factor
 
 /* Libera lo que Bison descarta al recuperarse de un error */
@@ -67,7 +68,9 @@ sentencia:
     | salida
     | condicional
     | ciclo
+    | ciclo_para
     | fin_stmt
+    | retorno
     | error SEMI            { $$ = NULL; yyerrok; }   /* recuperacion: saltar hasta ';' y seguir */
     ;
 
@@ -75,6 +78,8 @@ sentencia:
 declaracion:
       GARAGE ENGINE IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_INT,   $3, $5, @1.first_line); }
     | GARAGE FUEL   IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_FLOAT, $3, $5, @1.first_line); }
+    /* Declaracion generica: el chasis toma el tipo del valor inicial (engine o fuel) */
+    | GARAGE CHASSIS IDENT ASSIGN expr SEMI { $$ = newDecl(TYPE_GENERIC, $3, $5, @1.first_line); }
     ;
 
 asignacion:
@@ -110,8 +115,35 @@ ciclo:
     }
     ;
 
+/* Ciclo para (for):  stint (init; cond; paso) { cuerpo }
+ *   init: declaracion o asignacion SIN ';'   (garage engine i := 0  |  i := 0)
+ *   paso: boost o asignacion SIN ';'          (i boost 1  |  i := i - 1)
+ * La variable de control va a la tabla de simbolos global, igual que en lap. */
+ciclo_para:
+    STINT LPAREN stint_init SEMI cond SEMI stint_paso RPAREN LBRACE lista_sent RBRACE {
+        $$ = newFor($3, $5, $7, $10, @1.first_line);
+    }
+    ;
+
+stint_init:
+      GARAGE ENGINE  IDENT ASSIGN expr { $$ = newDecl(TYPE_INT,     $3, $5, @1.first_line); }
+    | GARAGE FUEL    IDENT ASSIGN expr { $$ = newDecl(TYPE_FLOAT,   $3, $5, @1.first_line); }
+    | GARAGE CHASSIS IDENT ASSIGN expr { $$ = newDecl(TYPE_GENERIC, $3, $5, @1.first_line); }
+    | IDENT ASSIGN expr                { $$ = newAssign($1, $3, @1.first_line); }
+    ;
+
+stint_paso:
+      IDENT BOOST expr                 { $$ = newBoost($1, $3, @1.first_line); }
+    | IDENT ASSIGN expr                { $$ = newAssign($1, $3, @1.first_line); }
+    ;
+
 fin_stmt:
     FINISH SEMI             { $$ = newFinish(@1.first_line); }
+    ;
+
+/* Retorno: termina el programa entregando el valor de expr (como return en el main de C) */
+retorno:
+    PODIUM expr SEMI        { $$ = newReturn($2, @1.first_line); }
     ;
 
 cond:

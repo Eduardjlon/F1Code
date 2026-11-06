@@ -40,13 +40,16 @@ ID      [a-zA-Z_][a-zA-Z0-9_]*
 "garage"    { TOKEN(GARAGE); }
 "engine"    { TOKEN(ENGINE); }
 "fuel"      { TOKEN(FUEL); }
+"chassis"   { TOKEN(CHASSIS); }   /* declaracion generica: el tipo se infiere */
 "pitstop"   { TOKEN(PITSTOP); }
 "radio"     { TOKEN(RADIO); }
 "race"      { TOKEN(RACE); }
 "overtake"  { TOKEN(OVERTAKE); }
 "lap"       { TOKEN(LAP); }
+"stint"     { TOKEN(STINT); }     /* ciclo para (for) */
 "boost"     { TOKEN(BOOST); }
 "finish"    { TOKEN(FINISH); }
+"podium"    { TOKEN(PODIUM); }    /* retorno: termina el programa entregando un valor */
 
 ":="  { TOKEN(ASSIGN); }
 "<="  { TOKEN(LE); }
