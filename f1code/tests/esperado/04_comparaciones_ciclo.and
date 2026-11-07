@@ -1,5 +1,6 @@
 // Codigo Andante generado por f1code (Grupo 1) desde 04_comparaciones_ciclo.f1
 
+// Las 6 comparaciones y un ciclo con contador
 numero i = 0;
 numero suma = 0;
 historia (i < 5) inicio

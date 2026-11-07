@@ -104,6 +104,8 @@ salida:
 condicional:
     RACE LPAREN cond RPAREN LBRACE lista_sent RBRACE opt_overtake {
         $$ = newIf($3, $6, $8, @1.first_line);
+        $$->endLine = @7.first_line;               /* '}' del race: ubica los comentarios */
+        if ($8) $$->elseEnd = @8.last_line;        /* ultima '}' del overtake */
     }
     ;
 
@@ -118,6 +120,7 @@ opt_overtake:
 ciclo:
     LAP LPAREN cond RPAREN LBRACE lista_sent RBRACE {
         $$ = newWhile($3, $6, @1.first_line);
+        $$->endLine = @7.first_line;
     }
     ;
 
@@ -128,6 +131,7 @@ ciclo:
 ciclo_para:
     STINT LPAREN stint_init SEMI cond SEMI stint_paso RPAREN LBRACE lista_sent RBRACE {
         $$ = newFor($3, $5, $7, $10, @1.first_line);
+        $$->endLine = @11.first_line;
     }
     ;
 

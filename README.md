@@ -265,7 +265,10 @@ La asignación se escribe con **`:=`**, no con `=`. La igualdad se compara con `
    puede abarcar varias líneas */
 ```
 
-Ambos se descartan en el análisis léxico y no llegan al parser.
+No llegan al parser (no son tokens), pero el lexer los guarda con su línea y el generador los **copia al `.and`
+en el mismo lugar**: antes de la instrucción que les sigue, al final del bloque donde estaban, o al lado de la
+instrucción si estaban en la misma línea. Andante usa los mismos `//` y `/* */`. Con `--sin-comentarios` se
+descartan.
 
 ### Gramática (BNF simplificado)
 
@@ -380,7 +383,7 @@ Casos que el compilador debe rechazar, y por qué:
 make test
 ```
 
-Corre la batería completa (40 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
+Corre la batería completa (41 pruebas): cada programa de `tests/validos/` debe traducirse y su `.and` debe ser idéntico al de `tests/esperado/`; cada programa de `tests/invalidos/` debe rechazarse sin generar `.and`.
 
 | Válidas | Qué cubren |
 |---|---|
@@ -398,6 +401,7 @@ Corre la batería completa (40 pruebas): cada programa de `tests/validos/` debe 
 | 12_texto_pilot | `pilot`, comillas simples y dobles, `radio`/`pitstop` con texto, `==`/`!=`, texto en bloque y patrón del Grupo 2 |
 | 13_prueba_real_grupo2 | Programa real generado por el Grupo 2 desde Dara, sin modificar |
 | 14_texto_casos_limite | Texto vacío, acentos, comillas anidadas, escapes (`\n`, `\"`), texto en `stint` y en `podium` |
+| 15_comentarios | Comentarios copiados al `.and`: inicio, misma línea, bloques, `overtake`, `stint`, `finish` y final |
 
 | Inválidas | Error esperado |
 |---|---|

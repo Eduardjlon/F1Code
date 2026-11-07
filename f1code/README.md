@@ -23,7 +23,8 @@ make                                   # genera ./f1code
 ./f1code tests/valido.f1               # genera tests/valido.and
 ./f1code programa.f1 -o salida.and     # nombre de salida propio
 ./f1code programa.f1 --ast --tabla     # además imprime el AST y la tabla de símbolos
-make test                              # 40 pruebas: válidas, inválidas y .and esperado
+./f1code programa.f1 --sin-comentarios # no copia los comentarios al .and
+make test                              # 41 pruebas: válidas, inválidas y .and esperado
 make clean
 ```
 
@@ -34,12 +35,13 @@ Si hay errores léxicos, sintácticos o semánticos, se reportan con número de 
 ## Estructura
 
 ```
-include/            ast.h, symtab.h, semantico.h, codegen_andante.h
+include/            ast.h, symtab.h, semantico.h, codegen_andante.h, comentarios.h
 src/
   f1code.l          analizador léxico (Flex)
   f1code.y          gramática del contrato + AST, con recuperación de errores (Bison)
   ast.c             constructores e impresión del AST
   symtab.c          tabla de símbolos global
+  comentarios.c     comentarios del .f1 (el lexer los guarda; el generador los copia al .and)
   semantico.c       validaciones: declaración, tipos, división entre cero, finish/podium
   codegen_andante.c generador .and (único módulo que conoce Andante)
   main.c            línea de comandos

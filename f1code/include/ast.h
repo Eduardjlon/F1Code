@@ -39,6 +39,8 @@ typedef struct ASTNode {
     int isGeneric;             /* 1 si la declaracion fue con 'garage chassis' */
     VarType promotedFrom;      /* DECL tomada como pilot por recibir texto (ver semantico.c) */
     int promoted;              /* 1 si promotedFrom es valido */
+    int endLine;               /* IF/WHILE/FOR: linea de la '}' que cierra el bloque */
+    int elseEnd;               /* IF: linea de la ultima '}' del overtake */
     char *name;                /* usado por DECL, ASSIGN, BOOST, INPUT, VAR */
     struct ASTNode *expr;      /* expr de inicializacion / asignacion / boost / output */
 

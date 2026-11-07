@@ -2,14 +2,16 @@
 
 decimal leer_f1 = 0.0;
 
+// Declaraciones dentro de bloques y nombres reservados de Andante
 numero final_f1_f1 = 3;
 numero inicio_f1 = 0;
-numero final_f1 = 100;
+numero final_f1 = 100;   // obliga a buscar otro nombre para 'final'
 historia (inicio_f1 < final_f1_f1) inicio
     avanzar leer_f1 = 1.5;
     avanzar leer_f1 = leer_f1 + inicio_f1;
     caminar leer_f1;
     avanzar inicio_f1 = inicio_f1 + 1;
 final
-caminar leer_f1;
+caminar leer_f1;   // F1Code tiene tabla global: leer sigue declarada
 caminar final_f1;
+// inalcanzable: genera advertencia y no se traduce

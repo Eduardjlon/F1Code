@@ -1,5 +1,7 @@
 // Codigo Andante generado por f1code (Grupo 1) desde 01_demo_contrato.f1
 
+// Programa demostrativo de F1Code
+// hamilton = velocidad en km/h, leclerc = combustible restante
 numero hamilton = 300;
 decimal leclerc = 50.5;
 leer hamilton;
@@ -9,6 +11,8 @@ final
 sino inicio
     caminar leclerc;
 final
+/* Ciclo que reduce la velocidad
+   hasta llegar al limite de pit lane */
 historia (hamilton > 200) inicio
     avanzar hamilton = hamilton + (-10);
     caminar hamilton;

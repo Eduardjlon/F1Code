@@ -1,27 +1,29 @@
-garage engine contador := 0;
-garage engine limite := 0;
-garage fuel total := 0.0;
-garage fuel precio_base := 0.0;
-garage fuel resultado_final := 0.0;
+// Traduccion automatica de Dara a F1Code (.f1)
 
-contador := 0;
-total := 0.00;
-precio_base := 15.50;
-
-radio contador;
-pitstop limite;
-
-lap (contador < limite) {
-    contador := (contador + 1);
-   race (contador > 5) {
-        total := (total + (precio_base * 2.00));
-        radio total;
-    } overtake {
-        total := (total + precio_base);
-    }
+garage engine Jugador1 := 0;
+garage engine vidas := 0;
+garage fuel puntos := 0.0;
+// Archivo de prueba básico sin for ni return
+Jugador1 := "Alex";
+vidas := 5;
+puntos := 10.30;
+pitstop puntos;
+race (vidas >= 5) {
+    puntos := (puntos + (10.50 * 2));
 }
-
-resultado_final := ((total / 2.00) + 100.25);
-radio resultado_final;
+overtake race (vidas > 0) {
+    puntos := (puntos + 5);
+}
+overtake {
+    vidas := 0;
+}
+radio puntos;
+lap (vidas < 10) {
+    vidas := (vidas + 1);
+}
+/*
+    Este archivo contiene únicamente variables, 
+    lectura, escritura, condicionales y bucle mientras.
+*/
 
 finish;

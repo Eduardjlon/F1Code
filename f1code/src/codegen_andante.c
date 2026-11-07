@@ -14,6 +14,7 @@
  *   stint (I; c; P) {A}       ->  I  historia (c) inicio A P final
  *   finish;                   ->  ver emitList()
  *   podium e;                 ->  avanzar f1_podio = e;  y luego como finish
+ *   // ... y / * ... * /       ->  se copian igual, en el mismo lugar del programa
  *
  * Ademas:
  *   - Una declaracion que quedaria dentro de un bloque de Andante se sube al
@@ -27,7 +28,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <limits.h>
 #include "codegen_andante.h"
+#include "comentarios.h"
 
 /* ---------- Buffer de texto ---------- */
 
@@ -57,6 +60,9 @@ static void bufPrintf(Buf *b, const char *fmt, ...) {
 }
 
 static Buf body;            /* instrucciones                    */
+static int keepComments = 1;   /* 0 con --sin-comentarios */
+static int nextComment = 0;    /* siguiente comentario por copiar */
+static int lastLine = 0;       /* linea .f1 de la ultima instruccion escrita en una sola linea */
 static Buf decls;           /* declaraciones subidas al inicio  */
 static char *flag = NULL;   /* variable para finish anidado     */
 static char *podio = NULL;  /* variable que recibe el valor de podium */
@@ -237,6 +243,27 @@ static void indent(int level) {
 }
 
 static void emitList(ASTNode *s, int level, int depth);
+static void indent(int level);
+
+void setKeepComments(int on) { keepComments = on; }
+
+/* Copia, en orden, los comentarios que empiezan antes de 'beforeLine'. Un comentario
+   que estaba en la misma linea que la instruccion anterior se deja a su lado. */
+static void flushComments(int beforeLine, int level) {
+    if (!keepComments) return;
+    while (nextComment < comentariosTotal() && comentarioEn(nextComment)->line < beforeLine) {
+        const Comentario *c = comentarioEn(nextComment);
+        if (c->line == lastLine && body.len && body.d[body.len - 1] == '\n') {
+            body.len--;                                   /* x = 1; // comentario */
+            bufPrintf(&body, "   %s\n", c->text);
+        } else {
+            indent(level);
+            bufPrintf(&body, "%s\n", c->text);
+        }
+        lastLine = 0;
+        nextComment++;
+    }
+}
 
 static void emitStmt(ASTNode *s, int level, int depth) {
     const char *name = s->name ? outName(s->name) : NULL;
@@ -286,12 +313,14 @@ static void emitStmt(ASTNode *s, int level, int depth) {
             emitExpr(&body, s->cond, 0);
             bufPrintf(&body, ") inicio\n");
             emitList(s->thenBody, level + 1, depth + 1);
+            flushComments(s->endLine, level + 1);      /* comentarios al final del bloque */
             indent(level);
             bufPrintf(&body, "final\n");
             if (s->elseBody) {
                 indent(level);
                 bufPrintf(&body, "sino inicio\n");
                 emitList(s->elseBody, level + 1, depth + 1);
+                flushComments(s->elseEnd, level + 1);
                 indent(level);
                 bufPrintf(&body, "final\n");
             }
@@ -304,6 +333,7 @@ static void emitStmt(ASTNode *s, int level, int depth) {
             emitExpr(&body, s->cond, 0);
             bufPrintf(&body, ") inicio\n");
             emitList(s->thenBody, level + 1, depth + 1);
+            flushComments(s->endLine, level + 1);
             indent(level);
             bufPrintf(&body, "final\n");
             break;
@@ -323,6 +353,7 @@ static void emitStmt(ASTNode *s, int level, int depth) {
             if (last) last->next = s->step;
             emitList(last ? s->thenBody : s->step, level + 1, depth + 1);
             if (last) last->next = NULL;   /* se desengancha: el AST queda como estaba */
+            flushComments(s->endLine, level + 1);
             indent(level);
             bufPrintf(&body, "final\n");
             break;
@@ -361,11 +392,15 @@ static void emitStop(ASTNode *s, int level, int depth) {
 
 static void emitList(ASTNode *s, int level, int depth) {
     for (; s; s = s->next) {
+        flushComments(s->line, level);   /* comentarios que van antes de esta sentencia */
         if (isStop(s)) {
             emitStop(s, level, depth);
+            /* solo si escribio algo (un finish del nivel principal no genera nada) */
+            lastLine = (s->type == ND_RETURN || depth > 0) ? s->line : 0;
             return;
         }
         emitStmt(s, level, depth);
+        lastLine = (s->type == ND_IF || s->type == ND_WHILE || s->type == ND_FOR) ? 0 : s->line;
         if (s->hasFinish && s->next) {
             /* el siguiente es finish: no hace falta virar. (Un podium si lo necesita:
                no debe pisar el valor de un podium anidado que ya se ejecuto.) */
@@ -413,7 +448,10 @@ char *generateAndante(ASTNode *program, SymTable *t, const char *source) {
     scanReturns(stmts, &hasReturn, &returnType);
     if (hasReturn) podio = freeName("f1_podio");
 
+    nextComment = 0;
+    lastLine = 0;
     emitList(stmts, 0, 0);
+    flushComments(INT_MAX, 0);           /* comentarios del final del programa */
 
     bufPrintf(&out, "// Codigo Andante generado por f1code (Grupo 1) desde %s\n\n", baseName(source));
     if (decls.len) bufPrintf(&out, "%s", decls.d);

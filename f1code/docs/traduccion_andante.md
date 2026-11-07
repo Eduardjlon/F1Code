@@ -30,7 +30,7 @@ reescrituras en el generador, así que Andante recibe solo instrucciones que ya 
 | `podium e;` | `avanzar f1_podio = e;` y luego igual que `finish` (ver sección 3) |
 | `-e` | `-e` (entre paréntesis si es parte de otra expresión) |
 | `+ - * /`, `< > <= >= == !=`, `( )` | iguales |
-| `// ...`, `/* ... */` | se descartan |
+| `// ...`, `/* ... */` | se copian igual, en el mismo lugar (con `--sin-comentarios` se descartan) |
 
 ## 2. Reglas semánticas de F1Code (resuelven los pendientes del contrato)
 

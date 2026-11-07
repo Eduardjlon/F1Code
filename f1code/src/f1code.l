@@ -3,10 +3,29 @@
 #include <stdlib.h>
 #include <string.h>
 #include "ast.h"
+#include "comentarios.h"
 #include "f1code.tab.h"
+
+/* La lista de comentarios se compila junto con el lexer, que es quien la llena
+   (asi no hace falta agregar un objeto nuevo al Makefile). */
+#include "comentarios.c"
 
 extern int lexErrorCount;
 static int commentLine = 0;
+
+/* Texto del comentario de bloque que se esta leyendo (se guarda completo) */
+static char *bloque = NULL;
+static size_t bloqueLen = 0, bloqueCap = 0;
+static void bloqueAgregar(const char *s, size_t n) {
+    if (bloqueLen + n + 1 > bloqueCap) {
+        bloqueCap = (bloqueLen + n + 1) * 2;
+        bloque = realloc(bloque, bloqueCap);
+        if (!bloque) exit(2);
+    }
+    memcpy(bloque + bloqueLen, s, n);
+    bloqueLen += n;
+    bloque[bloqueLen] = '\0';
+}
 
 /* Cada token guarda su linea en yylloc (la usan el AST y los errores) y se
    devuelve al parser. Espacios y comentarios no tocan yylloc: asi un ';'
@@ -33,12 +52,17 @@ ID      [a-zA-Z_][a-zA-Z0-9_]*
 
 %%
 
-"//".*                  { /* comentario de una linea: se ignora */ }
-"/*"                    { commentLine = yylineno; BEGIN(COMMENT); }
-<COMMENT>"*/"           { BEGIN(INITIAL); }
-<COMMENT>[^*\n]+        { /* contenido del comentario de bloque */ }
-<COMMENT>"*"            { }
-<COMMENT>\n             { }
+  /* Los comentarios no son tokens, pero se guardan para copiarlos al .and */
+"//".*                  { comentarioAgregar(yylineno, yytext, (size_t)yyleng); }
+"/*"                    { commentLine = yylineno; bloqueLen = 0; bloqueAgregar("/*", 2); BEGIN(COMMENT); }
+<COMMENT>"*/"           {
+                            bloqueAgregar("*/", 2);
+                            comentarioAgregar(commentLine, bloque, bloqueLen);
+                            BEGIN(INITIAL);
+                        }
+<COMMENT>[^*\n]+        { bloqueAgregar(yytext, (size_t)yyleng); }
+<COMMENT>"*"            { bloqueAgregar("*", 1); }
+<COMMENT>\n             { bloqueAgregar("\n", 1); }
 <COMMENT><<EOF>>        {
                             fprintf(stderr, "Error lexico en linea %d: comentario de bloque sin cerrar\n", commentLine);
                             lexErrorCount++;

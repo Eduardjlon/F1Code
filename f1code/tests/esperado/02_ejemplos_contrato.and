@@ -1,5 +1,6 @@
 // Codigo Andante generado por f1code (Grupo 1) desde 02_ejemplos_contrato.f1
 
+// Los 6 ejemplos validos de la seccion 7 del contrato
 numero hamilton = 300;
 decimal verstappen = 50.5;
 leer hamilton;

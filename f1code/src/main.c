@@ -11,6 +11,7 @@
 #include "symtab.h"
 #include "semantico.h"
 #include "codegen_andante.h"
+#include "comentarios.h"
 
 extern FILE *yyin;
 extern int yyparse(void);
@@ -22,10 +23,11 @@ extern int synErrorCount;
 
 static void usage(const char *prog) {
     fprintf(stderr,
-            "Uso: %s <archivo.f1> [-o salida.and] [--ast] [--tabla]\n"
+            "Uso: %s <archivo.f1> [-o salida.and] [--ast] [--tabla] [--sin-comentarios]\n"
             "  -o archivo   nombre del archivo de salida (por defecto: el mismo nombre con extension .and)\n"
             "  --ast        imprime el arbol de sintaxis abstracta\n"
-            "  --tabla      imprime la tabla de simbolos\n",
+            "  --tabla      imprime la tabla de simbolos\n"
+            "  --sin-comentarios  no copia los comentarios del .f1 al .and\n",
             prog);
 }
 
@@ -54,6 +56,7 @@ static void cleanup(char *output) {
     programRoot = NULL;
     symtab_free(symtab);
     yylex_destroy();
+    comentariosLiberar();
 }
 
 int main(int argc, char **argv) {
@@ -69,6 +72,8 @@ int main(int argc, char **argv) {
             showAst = 1;
         } else if (strcmp(argv[i], "--tabla") == 0) {
             showTable = 1;
+        } else if (strcmp(argv[i], "--sin-comentarios") == 0) {
+            setKeepComments(0);
         } else if (strcmp(argv[i], "-h") == 0 || strcmp(argv[i], "--help") == 0) {
             usage(argv[0]);
             return 0;

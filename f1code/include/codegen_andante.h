@@ -14,4 +14,7 @@
  */
 char *generateAndante(ASTNode *program, SymTable *t, const char *source);
 
+/* 1 (por defecto): copia los comentarios del .f1 al .and. 0: los descarta (--sin-comentarios). */
+void setKeepComments(int on);
+
 #endif

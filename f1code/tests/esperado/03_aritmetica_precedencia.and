@@ -1,11 +1,12 @@
 // Codigo Andante generado por f1code (Grupo 1) desde 03_aritmetica_precedencia.f1
 
-numero a = 2 + (3 * 4);
-numero b = (2 + 3) * 4;
-numero c = 7 / 2;
-decimal d = 7 / 2.0;
-decimal e = a;
-numero f = (a - b) - c;
+// Precedencia, parentesis, division entera y mezcla de tipos
+numero a = 2 + (3 * 4);   // 14
+numero b = (2 + 3) * 4;   // 20
+numero c = 7 / 2;   // 3 (division entera)
+decimal d = 7 / 2.0;   // 3.50
+decimal e = a;   // engine -> fuel permitido
+numero f = (a - b) - c;   // asociatividad izquierda: -9
 numero g = ((-a) * 2) + (-(b - 1));
 caminar a;
 caminar b;
